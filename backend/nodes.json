@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1769658796299",
+    "ip": "192.168.10.2",
+    "name": "ESXi",
+    "status": "online",
+    "latency": 2,
+    "lastChecked": 1769660044586
+  },
+  {
+    "id": "1769659252407",
+    "ip": "192.168.20.3",
+    "name": "Web Server",
+    "status": "online",
+    "latency": 2,
+    "lastChecked": 1769660044588
+  },
+  {
+    "id": "1769659995316",
+    "ip": "8.8.8.8",
+    "name": "DNS",
+    "status": "online",
+    "latency": 52,
+    "lastChecked": 1769660044644
+  }
+]
