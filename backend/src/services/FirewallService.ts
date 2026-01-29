@@ -15,12 +15,26 @@ export class FirewallService {
             throw new Error('Address and List Name are required');
         }
 
+        // Security validation
+        const ipRegex = /^[0-9a-fA-F:./]+$/; // Basic IPv4/IPv6 CIDR characters
+        const safeStringRegex = /^[a-zA-Z0-9_\-.\s]+$/; // Alphanumeric, underscore, dash, dot, space
+
+        if (!ipRegex.test(address)) {
+            throw new Error('Invalid IP Address format');
+        }
+
+        if (!safeStringRegex.test(listName)) {
+            throw new Error('List Name contains invalid characters');
+        }
+
+        const safeComment = (comment || 'Added from web dashboard').replace(/[^a-zA-Z0-9\s_\-.,!]/g, '');
+
         try {
             await api.write([
                 '/ip/firewall/address-list/add',
                 `=address=${address}`,
                 `=list=${listName}`,
-                `=comment=${comment || 'Added from web dashboard'}`
+                `=comment=${safeComment}`
             ]);
 
             // Invalidate cache when a new entry is added

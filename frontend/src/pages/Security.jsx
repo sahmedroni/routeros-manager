@@ -13,12 +13,7 @@ const Security = () => {
         try {
             setLoading(true);
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/firewall/rules`, {
-                headers: {
-                    'x-router-host': user.host,
-                    'x-router-user': user.user,
-                    'x-router-password': user.password,
-                    'x-router-port': user.port
-                }
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -50,12 +45,9 @@ const Security = () => {
             const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/firewall/toggle`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-router-host': user.host,
-                    'x-router-user': user.user,
-                    'x-router-password': user.password,
-                    'x-router-port': user.port
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({ id, enabled: newStatus })
             });
 
@@ -85,10 +77,7 @@ const Security = () => {
     return (
         <div className="security-container">
             <div className="security-header">
-                <div>
-                    <h1 className="display-font">Security Policies</h1>
-                    <p className="subtitle">Firewall Filter Rules configuration</p>
-                </div>
+
                 <button
                     className="btn btn-primary refresh-btn"
                     onClick={fetchRules}

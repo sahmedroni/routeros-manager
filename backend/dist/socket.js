@@ -1,22 +1,42 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupWebSocket = setupWebSocket;
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const cookie_1 = __importDefault(require("cookie"));
+const crypto_1 = require("./utils/crypto");
 const SystemHealthService_1 = require("./services/SystemHealthService");
 const BandwidthService_1 = require("./services/BandwidthService");
 const DhcpService_1 = require("./services/DhcpService");
 const PingService_1 = require("./services/PingService");
 const LogService_1 = require("./services/LogService");
 const NodeMonitorService_1 = require("./services/NodeMonitorService");
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret';
 function setupWebSocket(io) {
     io.on('connection', (socket) => {
-        console.log('Client connected:', socket.id);
-        const routerConfig = socket.handshake.auth?.config;
-        if (!routerConfig || !routerConfig.host || !routerConfig.user) {
-            console.log('No valid router config provided, skipping intervals for socket:', socket.id);
-            // In production, we disconnect. In dev, we might stay connected but do nothing.
-            if (process.env.NODE_ENV === 'production') {
-                socket.disconnect();
+        // console.log('Client connected:', socket.id);
+        let routerConfig;
+        try {
+            const cookies = cookie_1.default.parse(socket.handshake.headers.cookie || '');
+            const token = cookies.token;
+            if (token) {
+                const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+                routerConfig = {
+                    host: decoded.host,
+                    user: decoded.user,
+                    password: (0, crypto_1.decrypt)(decoded.encryptedPass),
+                    port: decoded.port
+                };
             }
+        }
+        catch (error) {
+            console.error('Socket auth failed:', error);
+        }
+        if (!routerConfig) {
+            console.log('No valid session found, disconnecting socket:', socket.id);
+            socket.disconnect(true);
             return;
         }
         let selectedInterface = 'ether1';

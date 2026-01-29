@@ -6,38 +6,65 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Check for existing session
-        const savedConfig = localStorage.getItem('router_config');
-        if (savedConfig) {
-            try {
-                setUser(JSON.parse(savedConfig));
-            } catch (e) {
-                console.error('Failed to parse saved config');
-                localStorage.removeItem('router_config');
+    const checkSession = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/me`, {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const userData = await response.json();
+                setUser(userData);
+            } else {
+                setUser(null);
             }
+        } catch (error) {
+            console.error('Session check failed', error);
+            setUser(null);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
-    }, []);
-
-    const login = (config) => {
-        setUser(config);
-        localStorage.setItem('router_config', JSON.stringify(config));
     };
 
-    const logout = () => {
+    useEffect(() => {
+        checkSession();
+    }, []);
+
+    const login = async (config) => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Login failed');
+            }
+
+            // Fetch user details after successful login
+            await checkSession();
+            return { success: true };
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'}/api/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (e) {
+            console.error('Logout failed', e);
+        }
         setUser(null);
-        localStorage.removeItem('router_config');
     };
 
     const getAuthHeaders = () => {
-        if (!user) return {};
-        return {
-            'x-router-host': user.host,
-            'x-router-user': user.user,
-            'x-router-password': user.password,
-            'x-router-port': user.port.toString(),
-        };
+        return {}; // No headers needed, cookies are handled automatically
     };
 
     return (

@@ -165,6 +165,20 @@
     font-family: var(--font-display);
     letter-spacing: 1px;
     border-bottom: 1px solid var(--glass-border);
+    cursor: pointer;
+    transition: color 0.3s ease;
+    user-select: none;
+}
+
+.devices-table th:hover {
+    color: var(--accent-cyan);
+}
+
+.sort-icon {
+    display: inline-block;
+    margin-left: 6px;
+    opacity: 0.6;
+    font-size: 0.8em;
 }
 
 .devices-table td {

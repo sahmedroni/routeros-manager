@@ -24,40 +24,21 @@ const Login = () => {
         setIsSubmitting(true);
         setError(null);
 
-        const loginUrl = `${import.meta.env.VITE_BACKEND_URL.replace('/socket.io', '')}/api/login`;
-
         try {
-            const response = await fetch(loginUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    host: formData.host,
-                    user: formData.user,
-                    password: formData.password,
-                    port: parseInt(formData.port)
-                })
+            await login({
+                host: formData.host,
+                user: formData.user,
+                password: formData.password,
+                port: parseInt(formData.port)
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                // Save last used host/user/port for convenience
-                localStorage.setItem('last_host', formData.host);
-                localStorage.setItem('last_user', formData.user);
-                localStorage.setItem('last_port', formData.port);
-
-                login({
-                    host: formData.host,
-                    user: formData.user,
-                    password: formData.password,
-                    port: parseInt(formData.port)
-                });
-            } else {
-                setError(data.error || 'Authentication failed');
-            }
+            // Save last used host/user/port for convenience (excluding password)
+            localStorage.setItem('last_host', formData.host);
+            localStorage.setItem('last_user', formData.user);
+            localStorage.setItem('last_port', formData.port);
         } catch (err) {
-            console.error('Login connection error:', err);
-            setError(`Connection Failed: ${err.message}. Target: ${loginUrl}`);
+            console.error('Login error:', err);
+            setError(err.message || 'Authentication failed');
         } finally {
             setIsSubmitting(false);
         }

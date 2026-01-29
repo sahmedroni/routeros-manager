@@ -7,7 +7,6 @@ const ITEMS_PER_PAGE = 15;
 
 const DevicesTable = () => {
   const { dhcpLeases } = useSocket();
-  const { getAuthHeaders } = useAuth();
   const [notification, setNotification] = React.useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addressLists, setAddressLists] = useState([]);
@@ -16,6 +15,7 @@ const DevicesTable = () => {
   const [isLoadingLists, setIsLoadingLists] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({ key: 'address', direction: 'asc' });
 
   // Use DHCP leases if available, otherwise show empty state
   const devices = dhcpLeases && dhcpLeases.length > 0 ? dhcpLeases : [];
@@ -31,12 +31,59 @@ const DevicesTable = () => {
     );
   });
 
+  // Sorting Logic
+  const sortedDevices = React.useMemo(() => {
+    let sortableItems = [...filteredDevices];
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        let aValue = a[sortConfig.key] || '';
+        let bValue = b[sortConfig.key] || '';
+
+        // Special handling for IP addresses to sort numerically
+        if (sortConfig.key === 'address') {
+          const ipToNum = (ip) => ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+          try {
+            aValue = ipToNum(aValue);
+            bValue = ipToNum(bValue);
+            if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
+          } catch (e) {
+            // Fallback to string sort if parsing fails
+          }
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [filteredDevices, sortConfig]);
+
   // Pagination Logic
-  const totalPages = Math.ceil(filteredDevices.length / ITEMS_PER_PAGE);
-  const paginatedDevices = filteredDevices.slice(
+  const totalPages = Math.ceil(sortedDevices.length / ITEMS_PER_PAGE);
+  const paginatedDevices = sortedDevices.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIndicator = (name) => {
+    if (sortConfig.key !== name) return <span className="sort-icon">↕</span>;
+    return <span className="sort-icon">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+  };
 
   // Reset to first page when search changes
   useEffect(() => {
@@ -47,7 +94,7 @@ const DevicesTable = () => {
     setIsLoadingLists(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL.replace('/socket.io', '')}/api/firewall/lists`, {
-        headers: getAuthHeaders()
+        credentials: 'include'
       });
       const data = await response.json();
       if (response.ok) {
@@ -74,9 +121,9 @@ const DevicesTable = () => {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL.replace('/socket.io', '')}/api/firewall/add`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           address: selectedDevice.address,
           list: selectedList,
@@ -145,11 +192,11 @@ const DevicesTable = () => {
             <table className="devices-table">
               <thead>
                 <tr>
-                  <th>IP ADDRESS</th>
-                  <th>MAC ADDRESS</th>
-                  <th>HOSTNAME</th>
-                  <th>STATUS</th>
-                  <th>SERVER</th>
+                  <th onClick={() => requestSort('address')}>IP ADDRESS {getSortIndicator('address')}</th>
+                  <th onClick={() => requestSort('mac')}>MAC ADDRESS {getSortIndicator('mac')}</th>
+                  <th onClick={() => requestSort('hostname')}>HOSTNAME {getSortIndicator('hostname')}</th>
+                  <th onClick={() => requestSort('status')}>STATUS {getSortIndicator('status')}</th>
+                  <th onClick={() => requestSort('server')}>SERVER {getSortIndicator('server')}</th>
                   <th>ACTIONS</th>
                 </tr>
               </thead>

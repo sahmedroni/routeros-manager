@@ -31,7 +31,7 @@ const Traffic = () => {
         const fetchInterfaces = async () => {
             try {
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_URL.replace('/socket.io', '')}/api/interfaces`, {
-                    headers: getAuthHeaders()
+                    credentials: 'include'
                 });
                 const data = await response.json();
                 if (Array.isArray(data)) {
