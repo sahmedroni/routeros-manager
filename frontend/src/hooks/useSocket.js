@@ -1,14 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const MAX_DATA_POINTS = 15;
 
 /**
- * Custom hook to manage WebSocket connection and real-time data
+ * Custom hook to manage real-time data from WebSocket
  */
 export function useSocket() {
-    const { user } = useAuth();
+    const { user, socket } = useAuth();
     const [realtimeStats, setRealtimeStats] = useState(null);
     const [interfaceStatus, setInterfaceStatus] = useState([]);
     const [dhcpLeases, setDhcpLeases] = useState([]);
@@ -17,52 +16,32 @@ export function useSocket() {
     const [nodes, setNodes] = useState([]);
     const [isConnected, setIsConnected] = useState(false);
     const [error, setError] = useState(null);
-    const socketRef = useRef(null);
+    const [latencyHistory, setLatencyHistory] = useState({});
 
     useEffect(() => {
-        if (!user) return;
-
-        // Create socket connection with auth data
-        socketRef.current = io(BACKEND_URL, {
-            transports: ['websocket', 'polling'],
-            reconnection: true,
-            reconnectionDelay: 1000,
-            reconnectionAttempts: 10,
-            auth: {
-                config: user
-            }
-        });
-
-        const socket = socketRef.current;
-
-        // ... (remaining event handlers)
-        socket.on('connect', () => {
-            console.log('✅ WebSocket connected');
-            setIsConnected(true);
-            setError(null);
-        });
-
-        socket.on('disconnect', () => {
-            console.log('❌ WebSocket disconnected');
+        if (!socket || !user) {
             setIsConnected(false);
-        });
+            setRealtimeStats(null);
+            setInterfaceStatus([]);
+            setDhcpLeases([]);
+            setPingLatency(null);
+            setSystemLogs([]);
+            setNodes([]);
+            return;
+        }
 
-        socket.on('connect_error', (err) => {
-            console.error('WebSocket connection error:', err);
-            setError('Failed to connect to server');
-            setIsConnected(false);
-        });
+        setIsConnected(true);
 
         socket.on('realtime-stats', (data) => {
             setRealtimeStats(data);
         });
 
-        socket.on('dhcp-leases', (data) => {
-            setDhcpLeases(data);
-        });
-
         socket.on('interface-status', (data) => {
             setInterfaceStatus(data);
+        });
+
+        socket.on('dhcp-leases', (data) => {
+            setDhcpLeases(data);
         });
 
         socket.on('ping-latency', (data) => {
@@ -82,30 +61,68 @@ export function useSocket() {
             setError(errorMsg);
         });
 
+        socket.on('disconnect', () => {
+            setIsConnected(false);
+        });
+
+        socket.on('connect', () => {
+            setIsConnected(true);
+        });
+
         return () => {
-            if (socket) {
-                socket.disconnect();
-            }
+            socket.off('realtime-stats');
+            socket.off('interface-status');
+            socket.off('dhcp-leases');
+            socket.off('ping-latency');
+            socket.off('system-logs');
+            socket.off('node-stats');
+            socket.off('error');
+            socket.off('disconnect');
+            socket.off('connect');
         };
-    }, [user]);
+    }, [socket, user]);
 
-    const changeInterface = (interfaceName) => {
-        if (socketRef.current) {
-            socketRef.current.emit('change-bandwidth-interface', interfaceName);
+    useEffect(() => {
+        if (!nodes || nodes.length === 0) {
+            return;
         }
-    };
 
-    const addNode = (ip, name) => {
-        if (socketRef.current) {
-            socketRef.current.emit('add-node', { ip, name });
-        }
-    };
+        setLatencyHistory(prev => {
+            const updated = { ...prev };
+            nodes.forEach(node => {
+                if (!updated[node.id]) {
+                    updated[node.id] = [];
+                }
+                if (node.latency !== null) {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    updated[node.id] = [
+                        ...updated[node.id].slice(-MAX_DATA_POINTS),
+                        { time: timeStr, latency: node.latency }
+                    ];
+                }
+            });
+            return updated;
+        });
+    }, [nodes]);
 
-    const removeNode = (ip) => {
-        if (socketRef.current) {
-            socketRef.current.emit('remove-node', ip);
+    const changeInterface = useCallback((interfaceName) => {
+        if (socket) {
+            socket.emit('change-bandwidth-interface', interfaceName);
         }
-    };
+    }, [socket]);
+
+    const addNode = useCallback((ip, name) => {
+        if (socket) {
+            socket.emit('add-node', { ip, name });
+        }
+    }, [socket]);
+
+    const removeNode = useCallback((ip) => {
+        if (socket) {
+            socket.emit('remove-node', ip);
+        }
+    }, [socket]);
 
     return {
         realtimeStats,
@@ -114,6 +131,7 @@ export function useSocket() {
         pingLatency,
         systemLogs,
         isConnected,
+        latencyHistory,
         changeInterface,
         nodes,
         addNode,

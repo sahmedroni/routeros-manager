@@ -11,6 +11,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const helmet_1 = __importDefault(require("helmet"));
 const socket_1 = require("./socket");
 const FirewallService_1 = require("./services/FirewallService");
 const BandwidthService_1 = require("./services/BandwidthService");
@@ -22,12 +23,38 @@ const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
     cors: {
-        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Restrict to frontend origin
+        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
         methods: ['GET', 'POST'],
         credentials: true
     }
 });
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is not set. Please configure it in your .env file.');
+}
+if (JWT_SECRET.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be at least 32 characters long.');
+}
+// Security headers with Helmet
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'", "http://localhost:3001", "ws://localhost:3001"],
+            fontSrc: ["'self'", "data:"],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use((0, cors_1.default)({
     origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
     credentials: true
@@ -126,7 +153,7 @@ app.post('/api/firewall/toggle', auth_1.authMiddleware, async (req, res) => {
         res.json({ success: true });
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to toggle rule' });
+        res.status(400).json({ error: 'Failed to toggle rule' });
     }
 });
 // Setup WebSocket

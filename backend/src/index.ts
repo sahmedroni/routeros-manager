@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import { setupWebSocket } from './socket';
 import { FirewallService } from './services/FirewallService';
 import { BandwidthService } from './services/BandwidthService';
@@ -19,13 +20,42 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Restrict to frontend origin
+        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
         methods: ['GET', 'POST'],
         credentials: true
     }
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret';
+const JWT_SECRET = process.env.JWT_SECRET as string;
+
+if (!JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is not set. Please configure it in your .env file.');
+}
+
+if (JWT_SECRET.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be at least 32 characters long.');
+}
+
+// Security headers with Helmet
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'", "http://localhost:3001", "ws://localhost:3001"],
+            fontSrc: ["'self'", "data:"],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 app.use(cors({
     origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],

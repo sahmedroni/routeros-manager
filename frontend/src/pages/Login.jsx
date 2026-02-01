@@ -21,6 +21,7 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.password) return;
         setIsSubmitting(true);
         setError(null);
 
@@ -32,7 +33,6 @@ const Login = () => {
                 port: parseInt(formData.port)
             });
 
-            // Save last used host/user/port for convenience (excluding password)
             localStorage.setItem('last_host', formData.host);
             localStorage.setItem('last_user', formData.user);
             localStorage.setItem('last_port', formData.port);
@@ -127,7 +127,7 @@ const Login = () => {
                         </div>
                     )}
 
-                    <button type="submit" className="login-btn" disabled={isSubmitting}>
+                    <button type="submit" className="login-btn" disabled={isSubmitting || !formData.password}>
                         {isSubmitting ? (
                             <span className="loader" />
                         ) : (
