@@ -183,16 +183,10 @@
 
 .node-chart-mini {
     margin-top: 1.5rem;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 2px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
     overflow: hidden;
-}
-
-.latency-bar {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.5s ease-out, background-color 0.5s;
 }
 
 .empty-state {

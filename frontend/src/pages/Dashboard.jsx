@@ -1,13 +1,41 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Activity, Server, Wifi } from 'lucide-react';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import InterfaceStatus from '../components/InterfaceStatus';
 import { useSocket } from '../hooks/useSocket';
 import './Dashboard.css';
 
+const MAX_LATENCY_POINTS = 20;
+
 const Dashboard = () => {
   const { nodes, interfaceStatus, systemLogs } = useSocket();
+  const [latencyHistory, setLatencyHistory] = useState({});
 
-  // Helper to determine alert style based on log topics
+  useEffect(() => {
+    if (nodes && nodes.length > 0) {
+      setLatencyHistory(prev => {
+        const updated = { ...prev };
+        nodes.forEach(node => {
+          if (!updated[node.id]) {
+            updated[node.id] = [];
+          }
+          if (node.latency !== null) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            updated[node.id] = [
+              ...updated[node.id],
+              { time: timeStr, latency: node.latency }
+            ];
+            if (updated[node.id].length > MAX_LATENCY_POINTS) {
+              updated[node.id] = updated[node.id].slice(-MAX_LATENCY_POINTS);
+            }
+          }
+        });
+        return updated;
+      });
+    }
+  }, [nodes]);
+
   const getAlertType = (topics) => {
     if (!topics) return 'info';
     const t = topics.toLowerCase();
@@ -16,7 +44,6 @@ const Dashboard = () => {
     return 'info';
   };
 
-  // Helper to get latency color
   const getLatencyColor = (latency) => {
     if (latency === null) return 'var(--text-muted)';
     if (latency < 50) return 'var(--accent-green)';
@@ -24,10 +51,8 @@ const Dashboard = () => {
     return 'var(--accent-red)';
   };
 
-  // Format bandwidth data
   return (
     <div className="dashboard-container">
-
 
       <div className="nodes-dashboard-grid">
         {(!nodes || nodes.length === 0) ? (
@@ -65,15 +90,19 @@ const Dashboard = () => {
                   </span>
                 </div>
 
-                {node.status === 'online' && node.latency !== null && (
-                  <div className="latency-bar-container">
-                    <div
-                      className="latency-bar"
-                      style={{
-                        width: `${Math.min(100, (node.latency / 200) * 100)}%`,
-                        backgroundColor: getLatencyColor(node.latency)
-                      }}
-                    />
+                {node.status === 'online' && latencyHistory[node.id] && latencyHistory[node.id].length > 1 && (
+                  <div className="latency-graph-container">
+                    <ResponsiveContainer width="100%" height={20}>
+                      <LineChart data={latencyHistory[node.id]}>
+                        <Line
+                          type="monotone"
+                          dataKey="latency"
+                          stroke={getLatencyColor(node.latency)}
+                          strokeWidth={1.5}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                 )}
               </div>

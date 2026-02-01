@@ -39,10 +39,7 @@ const Sidebar = ({ currentPage, onPageChange }) => {
       </nav>
 
       <div className="sidebar-footer glass">
-        <div className="status-indicator">
-          <div className={`status-dot ${isConnected ? 'online' : ''}`} />
-          <span className="router-identity">{identity}</span>
-        </div>
+          <span className={`router-identity ${isConnected ? 'online' : 'offline'}`}>{identity}</span>
       </div>
     </aside>
   );

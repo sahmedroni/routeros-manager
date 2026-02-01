@@ -103,11 +103,18 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--text-primary);
     font-size: 0.75rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.router-identity.online {
+    color: var(--accent-green);
+}
+
+.router-identity.offline {
+    color: var(--accent-red);
 }
 
 @media (max-width: 1024px) {

@@ -1,19 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useSocket } from '../hooks/useSocket';
 import './Nodes.css';
 
-const Nodes = () => {
-    // Destructure the values and functions directly from useSocket
-    const { nodes, addNode, removeNode } = useSocket();
+const MAX_LATENCY_POINTS = 20;
 
-    // Local UI state
+const Nodes = () => {
+    const { nodes, addNode, removeNode } = useSocket();
+    const [latencyHistory, setLatencyHistory] = useState({});
+
+    useEffect(() => {
+        if (nodes && nodes.length > 0) {
+            setLatencyHistory(prev => {
+                const updated = { ...prev };
+                nodes.forEach(node => {
+                    if (!updated[node.id]) {
+                        updated[node.id] = [];
+                    }
+                    if (node.latency !== null) {
+                        const now = new Date();
+                        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        updated[node.id] = [
+                            ...updated[node.id],
+                            { time: timeStr, latency: node.latency }
+                        ];
+                        if (updated[node.id].length > MAX_LATENCY_POINTS) {
+                            updated[node.id] = updated[node.id].slice(-MAX_LATENCY_POINTS);
+                        }
+                    }
+                });
+                return updated;
+            });
+        }
+    }, [nodes]);
+
     const [newNodeIp, setNewNodeIp] = useState('');
     const [newNodeName, setNewNodeName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
 
     const handleAddNode = (e) => {
         e.preventDefault();
-        // Check if values exist before calling the function
         if (newNodeIp && newNodeName) {
             addNode(newNodeIp, newNodeName);
             setNewNodeIp('');
@@ -109,16 +135,19 @@ const Nodes = () => {
                                     </span>
                                 </div>
                             </div>
-                            {node.status === 'online' && (
+                            {node.status === 'online' && latencyHistory[node.id] && latencyHistory[node.id].length > 1 && (
                                 <div className="node-chart-mini">
-                                    {/* Simple visualization bar for latency */}
-                                    <div
-                                        className="latency-bar"
-                                        style={{
-                                            width: `${Math.min(100, (node.latency || 0) / 2)}%`,
-                                            backgroundColor: (node.latency || 0) > 100 ? '#ef4444' : '#10b981'
-                                        }}
-                                    />
+                                    <ResponsiveContainer width="100%" height={60}>
+                                        <LineChart data={latencyHistory[node.id]}>
+                                            <Line
+                                                type="monotone"
+                                                dataKey="latency"
+                                                stroke="#10b981"
+                                                strokeWidth={2}
+                                                dot={false}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
                                 </div>
                             )}
                         </div>

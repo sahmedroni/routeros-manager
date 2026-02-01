@@ -5,22 +5,38 @@
     "name": "ESXi",
     "status": "online",
     "latency": 2,
-    "lastChecked": 1769660044586
+    "lastChecked": 1769925494946
   },
   {
-    "id": "1769659252407",
-    "ip": "192.168.20.3",
-    "name": "Web Server",
+    "id": "1769923909655",
+    "ip": "192.168.100.4",
+    "name": "Unify HO",
     "status": "online",
     "latency": 2,
-    "lastChecked": 1769660044588
+    "lastChecked": 1769925494948
   },
   {
-    "id": "1769659995316",
+    "id": "1769924062402",
+    "ip": "192.168.0.5",
+    "name": "Wifi IT EW1300G",
+    "status": "online",
+    "latency": 1,
+    "lastChecked": 1769925494952
+  },
+  {
+    "id": "1769924086545",
+    "ip": "192.168.0.8",
+    "name": "INS Front EW1300G",
+    "status": "online",
+    "latency": 1,
+    "lastChecked": 1769925494953
+  },
+  {
+    "id": "1769925496303",
     "ip": "8.8.8.8",
     "name": "DNS",
-    "status": "online",
-    "latency": 52,
-    "lastChecked": 1769660044644
+    "status": "pending",
+    "latency": null,
+    "lastChecked": 1769925496303
   }
 ]

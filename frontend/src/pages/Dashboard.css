@@ -215,10 +215,10 @@
 }
 
 .node-dashboard-card {
-    padding: 20px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
     transition: all 0.3s ease;
     border: 1px solid var(--glass-border);
 }
@@ -243,19 +243,38 @@
 .node-title-section {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+}
+
+.footer-text {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
 }
 
 .node-name {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
 }
 
+.info-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
 .status-indicator {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     animation: pulse-status 2s ease-in-out infinite;
 }
@@ -288,10 +307,10 @@
 }
 
 .status-badge {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     font-weight: 700;
-    padding: 4px 12px;
-    border-radius: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -317,14 +336,14 @@
 .node-card-body {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 4px;
 }
 
 .node-info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 4px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -345,27 +364,20 @@
     font-family: var(--font-display);
 }
 
-.latency-bar-container {
+.latency-graph-container {
     width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
     overflow: hidden;
     margin-top: 4px;
-}
-
-.latency-bar {
-    height: 100%;
-    border-radius: 3px;
-    transition: all 0.5s ease;
-    box-shadow: 0 0 10px currentColor;
 }
 
 .node-card-footer {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-top: 8px;
+    gap: 6px;
+    padding-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
