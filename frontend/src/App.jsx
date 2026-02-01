@@ -8,6 +8,7 @@ import Devices from './pages/Devices';
 import Traffic from './pages/Traffic';
 import Login from './pages/Login';
 import Security from './pages/Security';
+import Settings from './pages/Settings';
 import { useAuth } from './context/AuthContext';
 
 import './App.css';
@@ -42,6 +43,8 @@ function App() {
         return <Traffic />;
       case 'security':
         return <Security />;
+      case 'settings':
+        return <Settings />;
       default:
         return <Dashboard />;
     }
