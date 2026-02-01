@@ -1,9 +1,9 @@
-import React from 'react';
-import { LayoutDashboard, Activity, Database, Shield, Server, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutDashboard, Activity, Database, Shield, Server, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
 import './Sidebar.css';
 
-const Sidebar = ({ currentPage, onPageChange }) => {
+const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) => {
   const { realtimeStats, isConnected } = useSocket();
 
   const identity = realtimeStats?.identity || (isConnected ? 'MikroTik' : 'Connecting...');
@@ -18,10 +18,10 @@ const Sidebar = ({ currentPage, onPageChange }) => {
   ];
 
   return (
-    <aside className="sidebar glass scanline">
+    <aside className={`sidebar glass scanline ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-logo">
         <Activity className="logo-icon pulse-cyan" size={32} color="var(--accent-cyan)" />
-        <span className="logo-text">NET<span className="accent">VOX</span></span>
+        {!isCollapsed && <span className="logo-text">NET<span className="accent">VOX</span></span>}
       </div>
 
       <nav className="sidebar-nav">
@@ -30,16 +30,25 @@ const Sidebar = ({ currentPage, onPageChange }) => {
             key={index}
             className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
             onClick={() => onPageChange(item.id)}
+            title={isCollapsed ? item.label : undefined}
           >
             <span className="nav-icon">{item.icon}</span>
-            <span className="nav-label">{item.label}</span>
-            {currentPage === item.id && <div className="active-glow" />}
+            {!isCollapsed && <span className="nav-label">{item.label}</span>}
+            {currentPage === item.id && !isCollapsed && <div className="active-glow" />}
           </div>
         ))}
       </nav>
 
+      <div className="sidebar-collapse-btn" onClick={onToggleCollapse}>
+        {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+      </div>
+
       <div className="sidebar-footer glass">
-          <span className={`router-identity ${isConnected ? 'online' : 'offline'}`}>{identity}</span>
+          {isCollapsed ? (
+            <div className={`router-status-dot ${isConnected ? 'online' : 'offline'}`} />
+          ) : (
+            <span className={`router-identity ${isConnected ? 'online' : 'offline'}`}>{identity}</span>
+          )}
       </div>
     </aside>
   );

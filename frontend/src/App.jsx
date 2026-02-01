@@ -16,6 +16,7 @@ import './App.css';
 function App() {
   const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = React.useState('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   if (loading) {
     return (
@@ -52,8 +53,13 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="main-content">
+      <Sidebar
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+      <main className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
         <TopBar />
         <div className="content-area">
           {renderPage()}
