@@ -10,6 +10,11 @@
     padding: 24px 0;
     z-index: 100;
     overflow: hidden;
+    transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 80px;
 }
 
 .sidebar-logo {
@@ -17,6 +22,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.sidebar.collapsed .sidebar-logo {
+    padding: 0 16px 40px;
+    justify-content: center;
 }
 
 .logo-text {
@@ -52,10 +62,19 @@
     position: relative;
 }
 
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 12px;
+}
+
 .nav-item:hover {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.03);
     transform: translateX(4px);
+}
+
+.sidebar.collapsed .nav-item:hover {
+    transform: translateX(0);
 }
 
 .nav-item.active {
@@ -74,29 +93,43 @@
     border-radius: 0 4px 4px 0;
 }
 
+.sidebar-collapse-btn {
+    position: absolute;
+    right: -12px;
+    bottom: 100px;
+    width: 32px;
+    height: 32px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.sidebar.collapsed .sidebar-collapse-btn {
+    bottom: 100px;
+}
+
+.sidebar-collapse-btn:hover {
+    background: var(--accent-cyan);
+    color: var(--bg-primary);
+    border-color: var(--accent-cyan);
+}
+
 .sidebar-footer {
     margin: 0 16px;
     padding: 16px;
     border-radius: 12px;
 }
 
-.status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.status-dot.online {
-    background: var(--accent-green);
-    box-shadow: var(--glow-green);
+.sidebar.collapsed .sidebar-footer {
+    padding: 12px;
+    text-align: center;
 }
 
 .router-identity {
@@ -109,12 +142,45 @@
     white-space: nowrap;
 }
 
+.sidebar.collapsed .router-identity {
+    display: none;
+}
+
 .router-identity.online {
     color: var(--accent-green);
 }
 
 .router-identity.offline {
     color: var(--accent-red);
+}
+
+.router-status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 auto;
+    animation: breathe-green 2s ease-in-out infinite;
+}
+
+.router-status-dot.online {
+    background: var(--accent-green);
+    box-shadow: 0 0 10px var(--accent-green);
+}
+
+.router-status-dot.offline {
+    background: var(--accent-red);
+    box-shadow: 0 0 10px var(--accent-red);
+}
+
+@keyframes breathe-green {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
 }
 
 @media (max-width: 1024px) {

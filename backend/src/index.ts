@@ -146,7 +146,7 @@ app.post('/api/firewall/toggle', authMiddleware, async (req, res) => {
         await FirewallService.toggleFilterRule(id, enabled, req.routerConfig);
         res.json({ success: true });
     } catch (error: any) {
-        res.status(500).json({ error: 'Failed to toggle rule' });
+        res.status(400).json({ error: 'Failed to toggle rule' });
     }
 });
 

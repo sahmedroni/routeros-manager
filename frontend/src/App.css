@@ -44,6 +44,10 @@
     transition: margin-left 0.3s ease;
 }
 
+.main-content.expanded {
+    margin-left: 80px;
+}
+
 .content-area {
     padding: 24px;
     overflow-y: auto;
