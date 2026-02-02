@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ArrowDown, ArrowUp, GitBranch, AlertCircle, Search } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp, GitBranch, AlertCircle, Search, Plus, Edit2, Trash2, Power, PowerOff } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../context/AuthContext';
 import './Traffic.css';
@@ -338,7 +338,7 @@ const Traffic = () => {
                                 <Search size={16} className="search-icon" />
                             </div>
                             <button className="login-btn" onClick={openQueueAdd} style={{ height: '40px', padding: '0 20px' }}>
-                                <Activity size={18} />
+                                <Plus size={18} />
                                 Add Queue
                             </button>
                         </div>
@@ -385,7 +385,7 @@ const Traffic = () => {
                                                     onClick={() => handleQueueToggle(queue.id, !queue.disabled)}
                                                     title={queue.disabled ? 'Enable' : 'Disable'}
                                                 >
-                                                    {queue.disabled ? <Activity size={14} /> : <Activity size={14} />}
+                                                    {queue.disabled ? <PowerOff size={14} /> : <Power size={14} />}
                                                 </button>
                                             </td>
                                             <td className="device-id">{queue.name}</td>
@@ -395,11 +395,11 @@ const Traffic = () => {
                                             <td className="device-mac">{queue.comment || '-'}</td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button className="action-btn" onClick={() => openQueueEdit(queue)}>
-                                                        <Activity size={14} />
+                                                    <button className="action-btn" onClick={() => openQueueEdit(queue)} title="Edit">
+                                                        <Edit2 size={14} />
                                                     </button>
-                                                    <button className="action-btn" onClick={() => handleQueueDelete(queue.id, queue.name)}>
-                                                        <Activity size={14} />
+                                                    <button className="action-btn" onClick={() => handleQueueDelete(queue.id, queue.name)} title="Delete">
+                                                        <Trash2 size={14} />
                                                     </button>
                                                 </div>
                                             </td>
