@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSharedSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 
-const MAX_DATA_POINTS = 15;
+const MAX_DATA_POINTS = 8;
 
 export function useSocket() {
     const { user } = useAuth();

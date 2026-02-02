@@ -14,6 +14,7 @@ import { RouterConfig, RouterConnectionService } from './services/RouterConnecti
 import { authMiddleware } from './middleware/auth';
 import { encrypt } from './utils/crypto';
 import { PreferencesService } from './services/PreferencesService';
+import { SimpleQueueService } from './services/SimpleQueueService';
 
 dotenv.config();
 
@@ -219,6 +220,74 @@ app.post('/api/firewall/toggle', authMiddleware, async (req, res) => {
         res.json({ success: true });
     } catch (error: any) {
         res.status(400).json({ error: 'Failed to toggle rule' });
+    }
+});
+
+// Simple Queues API
+app.get('/api/queues', authMiddleware, async (req, res) => {
+    try {
+        const queues = await SimpleQueueService.getQueues(req.routerConfig);
+        res.json(queues);
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch queues' });
+    }
+});
+
+app.post('/api/queues', authMiddleware, async (req, res) => {
+    const { name, target, maxLimit, priority, comment } = req.body;
+    try {
+        const result = await SimpleQueueService.addQueue({ name, target, maxLimit, priority, comment }, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json({ error: result.message });
+        }
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.put('/api/queues/:id', authMiddleware, async (req, res) => {
+    const { name, maxLimit, disabled, comment } = req.body;
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService.updateQueue(queueId, { name, maxLimit, disabled, comment }, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json({ error: result.message });
+        }
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.delete('/api/queues/:id', authMiddleware, async (req, res) => {
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService.deleteQueue(queueId, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json({ error: result.message });
+        }
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.post('/api/queues/:id/toggle', authMiddleware, async (req, res) => {
+    const { enabled } = req.body;
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService.toggleQueue(queueId, enabled, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json({ error: result.message });
+        }
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
     }
 });
 

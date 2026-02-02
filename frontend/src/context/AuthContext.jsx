@@ -5,12 +5,12 @@ const AuthContext = createContext(null);
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
 const DEFAULT_PREFERENCES = {
-    realtimeInterval: 1000,
-    dhcpInterval: 5000,
-    pingInterval: 2000,
-    logInterval: 5000,
-    interfaceInterval: 5000,
-    nodeMonitorInterval: 3000
+    realtimeInterval: 2000,
+    dhcpInterval: 10000,
+    pingInterval: 5000,
+    logInterval: 10000,
+    interfaceInterval: 10000,
+    nodeMonitorInterval: 5000
 };
 
 export const AuthProvider = ({ children }) => {

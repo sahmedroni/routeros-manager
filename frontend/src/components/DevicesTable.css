@@ -19,6 +19,15 @@
     border: 1px solid rgba(255, 49, 49, 0.2);
 }
 
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
 @keyframes slideIn-device {
     from {
         transform: translateY(-10px);
@@ -320,6 +329,30 @@ tr:hover td {
 
 .form-group select:focus {
     border-color: var(--accent-cyan);
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"] {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.1);
+}
+
+.form-group input[type="number"]::-webkit-inner-spin-button,
+.form-group input[type="number"]::-webkit-outer-spin-button {
+    opacity: 0.5;
 }
 
 .modal-actions {

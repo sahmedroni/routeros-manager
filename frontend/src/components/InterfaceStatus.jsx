@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Network, Circle, Activity } from 'lucide-react';
 import './InterfaceStatus.css';
 
-const InterfaceStatus = ({ interfaces = [] }) => {
+const InterfaceStatus = memo(({ interfaces = [] }) => {
     const getStatusColor = (int) => {
         if (int.disabled) return 'var(--text-muted)';
         if (int.running) return 'var(--accent-green)';
@@ -45,6 +45,6 @@ const InterfaceStatus = ({ interfaces = [] }) => {
             ))}
         </div>
     );
-};
+});
 
 export default InterfaceStatus;

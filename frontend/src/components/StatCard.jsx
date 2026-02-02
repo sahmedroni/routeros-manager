@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import './StatCard.css';
 
-const StatCard = ({ title, value, unit, trend, icon, color, progress = 0 }) => {
+const StatCard = memo(({ title, value, unit, trend, icon, color, progress = 0 }) => {
   return (
     <div className="glass-card stat-card">
       <div className="stat-header">
@@ -25,6 +25,6 @@ const StatCard = ({ title, value, unit, trend, icon, color, progress = 0 }) => {
       </div>
     </div>
   );
-};
+});
 
 export default StatCard;

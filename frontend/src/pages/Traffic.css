@@ -5,6 +5,42 @@
     animation: fadeIn 0.5s ease;
 }
 
+.page-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    width: fit-content;
+}
+
+.page-tabs .tab-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.page-tabs .tab-button:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.page-tabs .tab-button.active {
+    color: var(--accent-cyan);
+    background: rgba(0, 242, 255, 0.08);
+}
+
 .traffic-header {
     display: flex;
     justify-content: space-between;

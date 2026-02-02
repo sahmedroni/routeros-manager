@@ -5,7 +5,7 @@ import InterfaceStatus from '../components/InterfaceStatus';
 import { useSocket } from '../hooks/useSocket';
 import './Dashboard.css';
 
-const MAX_LATENCY_POINTS = 15;
+const MAX_LATENCY_POINTS = 8;
 
 const Dashboard = () => {
   const { nodes, interfaceStatus, systemLogs } = useSocket();

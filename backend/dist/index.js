@@ -19,6 +19,7 @@ const RouterConnectionService_1 = require("./services/RouterConnectionService");
 const auth_1 = require("./middleware/auth");
 const crypto_1 = require("./utils/crypto");
 const PreferencesService_1 = require("./services/PreferencesService");
+const SimpleQueueService_1 = require("./services/SimpleQueueService");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
@@ -194,6 +195,78 @@ app.post('/api/firewall/toggle', auth_1.authMiddleware, async (req, res) => {
     }
     catch (error) {
         res.status(400).json({ error: 'Failed to toggle rule' });
+    }
+});
+// Simple Queues API
+app.get('/api/queues', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const queues = await SimpleQueueService_1.SimpleQueueService.getQueues(req.routerConfig);
+        res.json(queues);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch queues' });
+    }
+});
+app.post('/api/queues', auth_1.authMiddleware, async (req, res) => {
+    const { name, target, maxLimit, priority, comment } = req.body;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.addQueue({ name, target, maxLimit, priority, comment }, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.put('/api/queues/:id', auth_1.authMiddleware, async (req, res) => {
+    const { name, maxLimit, disabled, comment } = req.body;
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.updateQueue(queueId, { name, maxLimit, disabled, comment }, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.delete('/api/queues/:id', auth_1.authMiddleware, async (req, res) => {
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.deleteQueue(queueId, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.post('/api/queues/:id/toggle', auth_1.authMiddleware, async (req, res) => {
+    const { enabled } = req.body;
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.toggleQueue(queueId, enabled, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 // Setup WebSocket
