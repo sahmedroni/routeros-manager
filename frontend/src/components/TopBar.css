@@ -214,9 +214,57 @@
     gap: 8px;
     font-family: var(--font-display);
     font-size: 0.75rem;
-    color: var(--text-secondary);
     padding: 4px 12px;
     background: rgba(57, 255, 20, 0.05);
     border-radius: 20px;
     border: 1px solid rgba(57, 255, 20, 0.1);
+    transition: all 0.3s ease;
+}
+
+.connection-status:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.connection-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.connection-text {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.connection-status.disconnected {
+    background: rgba(255, 76, 60, 0.1);
+    border-color: rgba(255, 76, 60, 0.2);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+.connection-status.reconnecting {
+    background: rgba(255, 165, 0, 0.1);
+    border-color: rgba(255, 165, 0, 0.2);
+}
+
+@keyframes pulse-red {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 76, 60, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 10px 2px rgba(255, 76, 60, 0.2);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
 }

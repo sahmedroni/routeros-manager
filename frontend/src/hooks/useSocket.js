@@ -1,91 +1,49 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSharedSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 
 const MAX_DATA_POINTS = 15;
 
-/**
- * Custom hook to manage real-time data from WebSocket
- */
 export function useSocket() {
-    const { user, socket } = useAuth();
+    const { user } = useAuth();
+    const { socket, isConnected, on, off, emit } = useSharedSocket();
     const [realtimeStats, setRealtimeStats] = useState(null);
     const [interfaceStatus, setInterfaceStatus] = useState([]);
     const [dhcpLeases, setDhcpLeases] = useState([]);
     const [pingLatency, setPingLatency] = useState(null);
     const [systemLogs, setSystemLogs] = useState([]);
     const [nodes, setNodes] = useState([]);
-    const [isConnected, setIsConnected] = useState(false);
-    const [error, setError] = useState(null);
     const [latencyHistory, setLatencyHistory] = useState({});
 
     useEffect(() => {
-        if (!socket || !user) {
-            setIsConnected(false);
-            setRealtimeStats(null);
-            setInterfaceStatus([]);
-            setDhcpLeases([]);
-            setPingLatency(null);
-            setSystemLogs([]);
-            setNodes([]);
-            return;
-        }
+        if (!socket || !isConnected || !user) return;
 
-        setIsConnected(true);
+        const handleRealtimeStats = (data) => setRealtimeStats(data);
+        const handleInterfaceStatus = (data) => setInterfaceStatus(data);
+        const handleDhcpLeases = (data) => setDhcpLeases(data);
+        const handlePingLatency = (data) => setPingLatency(data);
+        const handleSystemLogs = (data) => setSystemLogs(data);
+        const handleNodeStats = (data) => setNodes(data);
 
-        socket.on('realtime-stats', (data) => {
-            setRealtimeStats(data);
-        });
-
-        socket.on('interface-status', (data) => {
-            setInterfaceStatus(data);
-        });
-
-        socket.on('dhcp-leases', (data) => {
-            setDhcpLeases(data);
-        });
-
-        socket.on('ping-latency', (data) => {
-            setPingLatency(data);
-        });
-
-        socket.on('system-logs', (data) => {
-            setSystemLogs(data);
-        });
-
-        socket.on('node-stats', (data) => {
-            setNodes(data);
-        });
-
-        socket.on('error', (errorMsg) => {
-            console.error('Server error:', errorMsg);
-            setError(errorMsg);
-        });
-
-        socket.on('disconnect', () => {
-            setIsConnected(false);
-        });
-
-        socket.on('connect', () => {
-            setIsConnected(true);
-        });
+        on('realtime-stats', handleRealtimeStats);
+        on('interface-status', handleInterfaceStatus);
+        on('dhcp-leases', handleDhcpLeases);
+        on('ping-latency', handlePingLatency);
+        on('system-logs', handleSystemLogs);
+        on('node-stats', handleNodeStats);
 
         return () => {
-            socket.off('realtime-stats');
-            socket.off('interface-status');
-            socket.off('dhcp-leases');
-            socket.off('ping-latency');
-            socket.off('system-logs');
-            socket.off('node-stats');
-            socket.off('error');
-            socket.off('disconnect');
-            socket.off('connect');
+            off('realtime-stats', handleRealtimeStats);
+            off('interface-status', handleInterfaceStatus);
+            off('dhcp-leases', handleDhcpLeases);
+            off('ping-latency', handlePingLatency);
+            off('system-logs', handleSystemLogs);
+            off('node-stats', handleNodeStats);
         };
-    }, [socket, user]);
+    }, [socket, isConnected, user, on, off]);
 
     useEffect(() => {
-        if (!nodes || nodes.length === 0) {
-            return;
-        }
+        if (!nodes || nodes.length === 0) return;
 
         setLatencyHistory(prev => {
             const updated = { ...prev };
@@ -107,22 +65,16 @@ export function useSocket() {
     }, [nodes]);
 
     const changeInterface = useCallback((interfaceName) => {
-        if (socket) {
-            socket.emit('change-bandwidth-interface', interfaceName);
-        }
-    }, [socket]);
+        emit('change-bandwidth-interface', interfaceName);
+    }, [emit]);
 
     const addNode = useCallback((ip, name) => {
-        if (socket) {
-            socket.emit('add-node', { ip, name });
-        }
-    }, [socket]);
+        emit('add-node', { ip, name });
+    }, [emit]);
 
     const removeNode = useCallback((ip) => {
-        if (socket) {
-            socket.emit('remove-node', ip);
-        }
-    }, [socket]);
+        emit('remove-node', ip);
+    }, [emit]);
 
     return {
         realtimeStats,
@@ -135,7 +87,6 @@ export function useSocket() {
         changeInterface,
         nodes,
         addNode,
-        removeNode,
-        error
+        removeNode
     };
 }

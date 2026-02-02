@@ -13,6 +13,7 @@ import { BandwidthService } from './services/BandwidthService';
 import { RouterConfig, RouterConnectionService } from './services/RouterConnectionService';
 import { authMiddleware } from './middleware/auth';
 import { encrypt } from './utils/crypto';
+import { PreferencesService } from './services/PreferencesService';
 
 dotenv.config();
 
@@ -131,6 +132,47 @@ app.get('/api/me', authMiddleware, (req, res) => {
         user: req.routerConfig?.user,
         port: req.routerConfig?.port
     });
+});
+
+// Preferences API
+app.get('/api/preferences', authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        const preferences = await PreferencesService.getPreferences(userId);
+        res.json(preferences);
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch preferences' });
+    }
+});
+
+app.post('/api/preferences', authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        const { realtimeInterval, dhcpInterval, pingInterval, logInterval, interfaceInterval, nodeMonitorInterval } = req.body;
+        
+        const preferences = await PreferencesService.savePreferencesForUser(userId, {
+            realtimeInterval,
+            dhcpInterval,
+            pingInterval,
+            logInterval,
+            interfaceInterval,
+            nodeMonitorInterval
+        });
+        
+        res.json(preferences);
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to save preferences' });
+    }
+});
+
+app.delete('/api/preferences', authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        await PreferencesService.deletePreferences(userId);
+        res.json(PreferencesService.getDefaultPreferences());
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to reset preferences' });
+    }
 });
 
 app.get('/api/interfaces', authMiddleware, async (req, res) => {

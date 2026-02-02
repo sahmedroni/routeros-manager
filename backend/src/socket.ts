@@ -58,15 +58,32 @@ export function setupWebSocket(io: Server) {
 
         let selectedInterface = 'ether1';
 
+        // Get user preferences from socket auth or use defaults
+        const userPreferences = socket.handshake.auth?.preferences || {};
+        
+        // Interval settings (defaults if not specified)
+        const realtimeIntervalMs = userPreferences.realtimeInterval || 1000;
+        const dhcpIntervalMs = userPreferences.dhcpInterval || 5000;
+        const pingIntervalMs = userPreferences.pingInterval || 2000;
+        const logIntervalMs = userPreferences.logInterval || 5000;
+        const interfaceIntervalMs = userPreferences.interfaceInterval || 5000;
+        const nodeMonitorIntervalMs = userPreferences.nodeMonitorInterval || 3000;
+
+        // Allow dynamic interval updates via socket event
+        let currentRealtimeInterval = realtimeIntervalMs;
+        let currentDhcpInterval = dhcpIntervalMs;
+        let currentPingInterval = pingIntervalMs;
+        let currentLogInterval = logIntervalMs;
+        let currentInterfaceInterval = interfaceIntervalMs;
+        let currentNodeMonitorInterval = nodeMonitorIntervalMs;
+
         // 1-second interval for real-time stats
-        const realTimeInterval = setInterval(async () => {
+        let realTimeInterval = setInterval(async () => {
             try {
                 const [healthData, trafficData] = await Promise.all([
                     SystemHealthService.getDashboardData(routerConfig),
                     BandwidthService.monitorTraffic(routerConfig, selectedInterface)
                 ]);
-
-                // console.log('Emitting realtime-stats with identity:', healthData.identity);
 
                 socket.emit('realtime-stats', {
                     ...healthData,
@@ -77,73 +94,171 @@ export function setupWebSocket(io: Server) {
                     }
                 });
             } catch (error) {
-                socket.emit('error', 'Failed to fetch real-time stats');
+                // Silently handle errors to prevent client disconnections
             }
-        }, 1000);
+        }, currentRealtimeInterval);
 
         socket.on('change-bandwidth-interface', (interfaceName: string) => {
             console.log(`Socket ${socket.id} changed bandwidth interface to: ${interfaceName}`);
             selectedInterface = interfaceName;
         });
 
+        // Dynamic interval update handler
+        socket.on('update-intervals', (prefs: {
+            realtimeInterval?: number;
+            dhcpInterval?: number;
+            pingInterval?: number;
+            logInterval?: number;
+            interfaceInterval?: number;
+            nodeMonitorInterval?: number;
+        }) => {
+            if (prefs.realtimeInterval && prefs.realtimeInterval !== currentRealtimeInterval) {
+                clearInterval(realTimeInterval);
+                currentRealtimeInterval = prefs.realtimeInterval;
+                realTimeInterval = setInterval(async () => {
+                    try {
+                        const [healthData, trafficData] = await Promise.all([
+                            SystemHealthService.getDashboardData(routerConfig),
+                            BandwidthService.monitorTraffic(routerConfig, selectedInterface)
+                        ]);
+
+                        socket.emit('realtime-stats', {
+                            ...healthData,
+                            bandwidth: {
+                                rx: trafficData['rx-bits-per-second'],
+                                tx: trafficData['tx-bits-per-second'],
+                                interface: selectedInterface
+                            }
+                        });
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+                }, currentRealtimeInterval);
+            }
+
+            if (prefs.dhcpInterval && prefs.dhcpInterval !== currentDhcpInterval) {
+                clearInterval(dhcpInterval);
+                currentDhcpInterval = prefs.dhcpInterval;
+                dhcpInterval = setInterval(async () => {
+                    try {
+                        const leases = await DhcpService.getLeases(routerConfig);
+                        socket.emit('dhcp-leases', leases);
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+                }, currentDhcpInterval);
+            }
+
+            if (prefs.pingInterval && prefs.pingInterval !== currentPingInterval) {
+                clearInterval(pingInterval);
+                currentPingInterval = prefs.pingInterval;
+                pingInterval = setInterval(async () => {
+                    try {
+                        const pingStats = await PingService.getPingStats(routerConfig?.host);
+                        socket.emit('ping-latency', pingStats);
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+                }, currentPingInterval);
+            }
+
+            if (prefs.logInterval && prefs.logInterval !== currentLogInterval) {
+                clearInterval(logInterval);
+                currentLogInterval = prefs.logInterval;
+                logInterval = setInterval(async () => {
+                    try {
+                        const logs = await LogService.getLogs(routerConfig, 20);
+                        socket.emit('system-logs', logs);
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+                }, currentLogInterval);
+            }
+
+            if (prefs.interfaceInterval && prefs.interfaceInterval !== currentInterfaceInterval) {
+                clearInterval(interfaceInterval);
+                currentInterfaceInterval = prefs.interfaceInterval;
+                interfaceInterval = setInterval(async () => {
+                    try {
+                        const interfaces = await BandwidthService.getInterfaces(routerConfig);
+                        socket.emit('interface-status', interfaces);
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+                }, currentInterfaceInterval);
+            }
+
+            if (prefs.nodeMonitorInterval && prefs.nodeMonitorInterval !== currentNodeMonitorInterval) {
+                clearInterval(nodeMonitorInterval);
+                currentNodeMonitorInterval = prefs.nodeMonitorInterval;
+                nodeMonitorInterval = setInterval(async () => {
+                    try {
+                        const nodes = await NodeMonitorService.monitorNodes();
+                        socket.emit('node-stats', nodes);
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+                }, currentNodeMonitorInterval);
+            }
+        });
+
         // 5-second interval for DHCP leases
-        const dhcpInterval = setInterval(async () => {
+        let dhcpInterval = setInterval(async () => {
             try {
                 const leases = await DhcpService.getLeases(routerConfig);
                 socket.emit('dhcp-leases', leases);
             } catch (error) {
-                socket.emit('error', 'Failed to fetch DHCP leases');
+                // Silently handle errors
             }
-        }, 5000);
+        }, currentDhcpInterval);
 
         // 2-second interval for ping latency
-        const pingInterval = setInterval(async () => {
+        let pingInterval = setInterval(async () => {
             try {
                 const pingStats = await PingService.getPingStats(routerConfig?.host);
                 socket.emit('ping-latency', pingStats);
             } catch (error) {
-                socket.emit('error', 'Failed to fetch ping latency');
+                // Silently handle errors
             }
-        }, 2000);
+        }, currentPingInterval);
 
         // 5-second interval for system logs
-        const logInterval = setInterval(async () => {
+        let logInterval = setInterval(async () => {
             try {
                 const logs = await LogService.getLogs(routerConfig, 20);
                 socket.emit('system-logs', logs);
             } catch (error) {
-                socket.emit('error', 'Failed to fetch system logs');
+                // Silently handle errors
             }
-        }, 5000);
+        }, currentLogInterval);
 
         // 5-second interval for all interface statuses
-        const interfaceInterval = setInterval(async () => {
+        let interfaceInterval = setInterval(async () => {
             try {
                 const interfaces = await BandwidthService.getInterfaces(routerConfig);
                 socket.emit('interface-status', interfaces);
             } catch (error) {
-                socket.emit('error', 'Failed to fetch interface statuses');
+                // Silently handle errors
             }
-        }, 5000);
+        }, currentInterfaceInterval);
 
         // 5-second interval for custom node monitoring
-        const nodeMonitorInterval = setInterval(async () => {
+        let nodeMonitorInterval = setInterval(async () => {
             try {
                 const nodes = await NodeMonitorService.monitorNodes();
                 socket.emit('node-stats', nodes);
             } catch (error) {
-                console.error('Error monitoring nodes:', error);
+                // Silently handle errors
             }
-        }, 3000);
+        }, currentNodeMonitorInterval);
 
         socket.on('add-node', async (data: { ip: string, name: string }) => {
             try {
                 await NodeMonitorService.addNode(data.ip, data.name);
-                // Immediately emit updated list
                 const nodes = await NodeMonitorService.getNodes();
                 socket.emit('node-stats', nodes);
             } catch (error) {
-                socket.emit('error', 'Failed to add node');
+                // Silently handle errors
             }
         });
 
@@ -153,7 +268,7 @@ export function setupWebSocket(io: Server) {
                 const nodes = await NodeMonitorService.getNodes();
                 socket.emit('node-stats', nodes);
             } catch (error) {
-                socket.emit('error', 'Failed to remove node');
+                // Silently handle errors
             }
         });
 
@@ -165,6 +280,12 @@ export function setupWebSocket(io: Server) {
             clearInterval(logInterval);
             clearInterval(interfaceInterval);
             clearInterval(nodeMonitorInterval);
+        });
+
+        socket.on('ping-check', (ack) => {
+            if (typeof ack === 'function') {
+                ack(true);
+            }
         });
     });
 }

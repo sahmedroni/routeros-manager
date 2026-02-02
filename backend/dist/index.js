@@ -18,6 +18,7 @@ const BandwidthService_1 = require("./services/BandwidthService");
 const RouterConnectionService_1 = require("./services/RouterConnectionService");
 const auth_1 = require("./middleware/auth");
 const crypto_1 = require("./utils/crypto");
+const PreferencesService_1 = require("./services/PreferencesService");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
@@ -108,6 +109,45 @@ app.get('/api/me', auth_1.authMiddleware, (req, res) => {
         user: req.routerConfig?.user,
         port: req.routerConfig?.port
     });
+});
+// Preferences API
+app.get('/api/preferences', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        const preferences = await PreferencesService_1.PreferencesService.getPreferences(userId);
+        res.json(preferences);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch preferences' });
+    }
+});
+app.post('/api/preferences', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        const { realtimeInterval, dhcpInterval, pingInterval, logInterval, interfaceInterval, nodeMonitorInterval } = req.body;
+        const preferences = await PreferencesService_1.PreferencesService.savePreferencesForUser(userId, {
+            realtimeInterval,
+            dhcpInterval,
+            pingInterval,
+            logInterval,
+            interfaceInterval,
+            nodeMonitorInterval
+        });
+        res.json(preferences);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to save preferences' });
+    }
+});
+app.delete('/api/preferences', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        await PreferencesService_1.PreferencesService.deletePreferences(userId);
+        res.json(PreferencesService_1.PreferencesService.getDefaultPreferences());
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to reset preferences' });
+    }
 });
 app.get('/api/interfaces', auth_1.authMiddleware, async (req, res) => {
     try {

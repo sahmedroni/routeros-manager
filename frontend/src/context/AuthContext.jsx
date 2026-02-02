@@ -1,32 +1,28 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { io } from 'socket.io-client';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
+const DEFAULT_PREFERENCES = {
+    realtimeInterval: 1000,
+    dhcpInterval: 5000,
+    pingInterval: 2000,
+    logInterval: 5000,
+    interfaceInterval: 5000,
+    nodeMonitorInterval: 3000
+};
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [socket, setSocket] = useState(null);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const logoutPromiseRef = useRef(null);
+    const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
 
     const checkSession = useCallback(async () => {
-        if (isLoggingOut) {
-            setLoading(false);
-            return;
-        }
-
         try {
             const response = await fetch(`${BACKEND_URL}/api/me`, {
                 credentials: 'include'
             });
-
-            if (isLoggingOut) {
-                setLoading(false);
-                return;
-            }
 
             if (response.ok) {
                 const userData = await response.json();
@@ -35,68 +31,86 @@ export const AuthProvider = ({ children }) => {
                 setUser(null);
             }
         } catch (error) {
-            if (isLoggingOut) {
-                setLoading(false);
-                return;
-            }
             console.error('Session check failed', error);
             setUser(null);
         } finally {
-            if (!isLoggingOut) {
-                setLoading(false);
-            }
+            setLoading(false);
         }
-    }, [isLoggingOut]);
+    }, []);
 
     useEffect(() => {
         checkSession();
     }, [checkSession]);
 
-    useEffect(() => {
-        if (!user || isLoggingOut) {
-            if (socket) {
-                socket.disconnect();
-                setSocket(null);
+    const loadPreferences = useCallback(async () => {
+        if (!user) return;
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/preferences`, {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const backendPrefs = await response.json();
+                setPreferences({ ...DEFAULT_PREFERENCES, ...backendPrefs });
             }
-            return;
+        } catch (error) {
+            console.error('Failed to load preferences:', error);
         }
+    }, [user]);
 
-        const newSocket = io(BACKEND_URL, {
-            transports: ['websocket', 'polling'],
-            reconnection: false,
-            auth: {
-                config: user
+    useEffect(() => {
+        if (user) {
+            loadPreferences();
+        }
+    }, [user, loadPreferences]);
+
+    const savePreferences = useCallback(async (newPreferences) => {
+        if (!user) return;
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/preferences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newPreferences),
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const savedPrefs = await response.json();
+                setPreferences(savedPrefs);
             }
-        });
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+        }
+    }, [user]);
 
-        newSocket.on('connect', () => {
-            if (!isLoggingOut) {
-                setSocket(newSocket);
+    const updatePreferences = useCallback((newPreferences) => {
+        const updated = { ...preferences, ...newPreferences };
+        setPreferences(updated);
+        savePreferences(updated);
+    }, [preferences, savePreferences]);
+
+    const resetPreferences = useCallback(async () => {
+        if (!user) return;
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/preferences`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const defaultPrefs = await response.json();
+                setPreferences(defaultPrefs);
             }
-        });
-
-        newSocket.on('disconnect', () => {
-            if (!isLoggingOut) {
-                setSocket(null);
-            }
-        });
-
-        newSocket.on('connect_error', (err) => {
-            if (!isLoggingOut) {
-                console.error('WebSocket connection error:', err);
-            }
-        });
-
-        return () => {
-            newSocket.disconnect();
-        };
-    }, [user, isLoggingOut]);
+        } catch (error) {
+            console.error('Failed to reset preferences:', error);
+            setPreferences(DEFAULT_PREFERENCES);
+        }
+    }, [user]);
 
     const login = async (config) => {
-        if (isLoggingOut) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
         try {
             const response = await fetch(`${BACKEND_URL}/api/login`, {
                 method: 'POST',
@@ -118,43 +132,30 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = useCallback(async () => {
-        if (logoutPromiseRef.current) {
-            return logoutPromiseRef.current;
+        try {
+            await fetch(`${BACKEND_URL}/api/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } catch (e) {
+            console.error('Logout failed', e);
         }
 
-        const logoutPromise = (async () => {
-            setIsLoggingOut(true);
-
-            if (socket) {
-                socket.disconnect();
-                setSocket(null);
-            }
-
-            try {
-                await fetch(`${BACKEND_URL}/api/logout`, {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-            } catch (e) {
-                console.error('Logout failed', e);
-            }
-
-            setUser(null);
-            setLoading(false);
-            setIsLoggingOut(false);
-            logoutPromiseRef.current = null;
-        })();
-
-        logoutPromiseRef.current = logoutPromise;
-        return logoutPromise;
-    }, [socket]);
-
-    const getAuthHeaders = () => {
-        return {};
-    };
+        setUser(null);
+        setLoading(false);
+        setPreferences(DEFAULT_PREFERENCES);
+    }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, getAuthHeaders, loading, socket }}>
+        <AuthContext.Provider value={{
+            user,
+            login,
+            logout,
+            loading,
+            preferences,
+            updatePreferences,
+            resetPreferences
+        }}>
             {children}
         </AuthContext.Provider>
     );
