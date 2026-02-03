@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, ArrowDown, ArrowUp, GitBranch, AlertCircle, Search, Plus, Edit2, Trash2, Power, PowerOff } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
-import { useAuth } from '../context/AuthContext';
 import './Traffic.css';
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
 const Traffic = () => {
     const { realtimeStats, changeInterface, isConnected } = useSocket();
-    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('traffic');
     
     const [interfaces, setInterfaces] = useState([]);
@@ -30,6 +26,8 @@ const Traffic = () => {
     });
     const [notification, setNotification] = useState(null);
     const [queueSearch, setQueueSearch] = useState('');
+
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
     const fetchInterfaces = async () => {
         try {
@@ -53,8 +51,6 @@ const Traffic = () => {
     };
 
     const fetchQueues = async () => {
-        if (!user) return;
-
         try {
             setQueuesLoading(true);
             const response = await fetch(`${BACKEND_URL}/api/queues`, {
@@ -363,50 +359,52 @@ const Traffic = () => {
                             <p className="small">{queueSearch ? 'Try a different search term' : 'Create a queue to start traffic shaping'}</p>
                         </div>
                     ) : (
-                        <div className="table-wrapper">
-                            <table className="devices-table">
-                                <thead>
-                                    <tr>
-                                        <th>Status</th>
-                                        <th>Name</th>
-                                        <th>Target</th>
-                                        <th>Max Limit</th>
-                                        <th>Priority</th>
-                                        <th>Comment</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredQueues.map((queue) => (
-                                        <tr key={queue.id}>
-                                            <td>
-                                                <button
-                                                    className="action-btn"
-                                                    onClick={() => handleQueueToggle(queue.id, !queue.disabled)}
-                                                    title={queue.disabled ? 'Enable' : 'Disable'}
-                                                >
-                                                    {queue.disabled ? <PowerOff size={14} /> : <Power size={14} />}
-                                                </button>
-                                            </td>
-                                            <td className="device-id">{queue.name}</td>
-                                            <td className="device-hostname">{queue.target}</td>
-                                            <td className="device-server">{formatLimit(queue.maxLimit)}</td>
-                                            <td>{queue.priority}</td>
-                                            <td className="device-mac">{queue.comment || '-'}</td>
-                                            <td>
-                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button className="action-btn" onClick={() => openQueueEdit(queue)} title="Edit">
-                                                        <Edit2 size={14} />
-                                                    </button>
-                                                    <button className="action-btn" onClick={() => handleQueueDelete(queue.id, queue.name)} title="Delete">
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                            </td>
+                        <div className="queues-card">
+                            <div className="queues-table-responsive">
+                                <table className="devices-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Name</th>
+                                            <th>Target</th>
+                                            <th>Max Limit</th>
+                                            <th>Priority</th>
+                                            <th>Comment</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {filteredQueues.map((queue) => (
+                                            <tr key={queue.id}>
+                                                <td>
+                                                    <button
+                                                        className="action-btn"
+                                                        onClick={() => handleQueueToggle(queue.id, !queue.disabled)}
+                                                        title={queue.disabled ? 'Enable' : 'Disable'}
+                                                    >
+                                                        {queue.disabled ? <PowerOff size={14} /> : <Power size={14} />}
+                                                    </button>
+                                                </td>
+                                                <td className="device-id">{queue.name}</td>
+                                                <td className="device-hostname">{queue.target}</td>
+                                                <td className="device-server">{formatLimit(queue.maxLimit)}</td>
+                                                <td>{queue.priority}</td>
+                                                <td className="device-mac">{queue.comment || '-'}</td>
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                        <button className="action-btn" onClick={() => openQueueEdit(queue)} title="Edit">
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                        <button className="action-btn" onClick={() => handleQueueDelete(queue.id, queue.name)} title="Delete">
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
 

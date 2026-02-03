@@ -15,6 +15,7 @@ import { authMiddleware } from './middleware/auth';
 import { encrypt } from './utils/crypto';
 import { PreferencesService } from './services/PreferencesService';
 import { SimpleQueueService } from './services/SimpleQueueService';
+import { SystemHealthService } from './services/SystemHealthService';
 
 dotenv.config();
 
@@ -176,6 +177,41 @@ app.delete('/api/preferences', authMiddleware, async (req, res) => {
     }
 });
 
+app.post('/api/system/reboot', authMiddleware, async (req, res) => {
+    try {
+        const result = await SystemHealthService.rebootRouter(req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json({ error: result.message });
+        }
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to reboot router' });
+    }
+});
+
+app.get('/api/system/updates', authMiddleware, async (req, res) => {
+    try {
+        const updateInfo = await SystemHealthService.checkForUpdates(req.routerConfig);
+        res.json(updateInfo);
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to check for updates' });
+    }
+});
+
+app.post('/api/system/updates/install', authMiddleware, async (req, res) => {
+    try {
+        const result = await SystemHealthService.installUpdates(req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(400).json({ error: result.message });
+        }
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to install updates' });
+    }
+});
+
 app.get('/api/interfaces', authMiddleware, async (req, res) => {
     try {
         const interfaces = await BandwidthService.getInterfaces(req.routerConfig);
@@ -198,6 +234,35 @@ app.post('/api/firewall/add', authMiddleware, async (req, res) => {
     const { address, list, comment } = req.body;
     try {
         const result = await FirewallService.addToAddressList(address, list, req.routerConfig, comment);
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.get('/api/firewall/addresses', authMiddleware, async (req, res) => {
+    try {
+        const entries = await FirewallService.getAddressListEntries(req.routerConfig);
+        res.json(entries);
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch address entries' });
+    }
+});
+
+app.post('/api/firewall/addresses/move', authMiddleware, async (req, res) => {
+    const { entryId, newList } = req.body;
+    try {
+        const result = await FirewallService.moveAddressToList(entryId, newList, req.routerConfig);
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.delete('/api/firewall/addresses/:id', authMiddleware, async (req, res) => {
+    const entryId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await FirewallService.removeAddressEntry(entryId, req.routerConfig);
         res.json(result);
     } catch (error: any) {
         res.status(400).json({ error: error.message });

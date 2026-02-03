@@ -268,3 +268,91 @@
 .spin {
     animation: spin 1s linear infinite;
 }
+
+/* Mobile-First TopBar */
+@media (max-width: 768px) {
+    .topbar {
+        height: auto;
+        min-height: 60px;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .topbar-title {
+        display: none;
+    }
+
+    .topbar-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .system-metrics {
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+        margin-right: 0;
+    }
+
+    .metric-item {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+        flex: 1;
+        min-width: calc(25% - 6px);
+        justify-content: center;
+    }
+
+    .metric-label {
+        display: none;
+    }
+
+    .metric-value {
+        font-size: 0.75rem;
+    }
+
+    .connection-status {
+        width: 100%;
+        justify-content: center;
+        padding: 8px 12px;
+    }
+
+    .connection-text {
+        font-size: 0.7rem;
+    }
+
+    .user-profile-container {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar {
+        padding: 10px 12px;
+    }
+
+    .topbar-title {
+        font-size: 1rem;
+    }
+
+    .system-metrics {
+        gap: 4px;
+    }
+
+    .metric-item {
+        min-width: calc(25% - 3px);
+        padding: 4px 6px;
+    }
+
+    .metric-item svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+@media (min-width: 769px) {
+    .topbar {
+        padding: 0 32px;
+    }
+}

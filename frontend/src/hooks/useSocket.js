@@ -7,6 +7,12 @@ const MAX_DATA_POINTS = 8;
 export function useSocket() {
     const { user } = useAuth();
     const { socket, isConnected, on, off, emit } = useSharedSocket();
+    // reference to socket for ack-based emits
+    const socketRef = useRef(null);
+
+    useEffect(() => {
+        socketRef.current = socket;
+    }, [socket]);
     const [realtimeStats, setRealtimeStats] = useState(null);
     const [interfaceStatus, setInterfaceStatus] = useState([]);
     const [dhcpLeases, setDhcpLeases] = useState([]);
@@ -16,7 +22,8 @@ export function useSocket() {
     const [latencyHistory, setLatencyHistory] = useState({});
 
     useEffect(() => {
-        if (!socket || !isConnected || !user) return;
+        // rely on isConnected and user; `on`/`off` use the internal socket ref
+        if (!isConnected || !user) return;
 
         const handleRealtimeStats = (data) => setRealtimeStats(data);
         const handleInterfaceStatus = (data) => setInterfaceStatus(data);
@@ -40,7 +47,7 @@ export function useSocket() {
             off('system-logs', handleSystemLogs);
             off('node-stats', handleNodeStats);
         };
-    }, [socket, isConnected, user, on, off]);
+    }, [isConnected, user, on, off]);
 
     useEffect(() => {
         if (!nodes || nodes.length === 0) return;
@@ -76,6 +83,39 @@ export function useSocket() {
         emit('remove-node', ip);
     }, [emit]);
 
+    const editNode = useCallback((idOrOldIp, ip, name, cb) => {
+        // Optimistically update local nodes state when an id is provided
+        if (typeof idOrOldIp === 'string' && /^[0-9]+$/.test(idOrOldIp)) {
+            setNodes(prev => prev.map(n => n.id === idOrOldIp ? { ...n, ip, name } : n));
+        }
+
+        // If first arg looks like an id (numeric timestamp string), send id; otherwise send oldIp for legacy
+        const payload = {};
+        if (typeof idOrOldIp === 'string' && /^[0-9]+$/.test(idOrOldIp)) {
+            payload.id = idOrOldIp;
+            payload.ip = ip;
+            payload.name = name;
+        } else {
+            payload.oldIp = idOrOldIp;
+            payload.ip = ip;
+            payload.name = name;
+        }
+
+        // emit with acknowledgement
+        emit('edit-node', payload, (response) => {
+            if (!response || !response.success) {
+                // revert optimistic update if possible
+                if (typeof idOrOldIp === 'string' && /^[0-9]+$/.test(idOrOldIp)) {
+                    // refresh nodes from server by requesting nothing — rely on server push; fallback: no-op
+                }
+                console.error('Edit node failed:', response?.error);
+                if (typeof cb === 'function') cb(response);
+            } else {
+                if (typeof cb === 'function') cb(response);
+            }
+        });
+    }, [emit, setNodes]);
+
     return {
         realtimeStats,
         interfaceStatus,
@@ -88,5 +128,6 @@ export function useSocket() {
         nodes,
         addNode,
         removeNode
+        , editNode
     };
 }

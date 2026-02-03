@@ -20,6 +20,7 @@ const auth_1 = require("./middleware/auth");
 const crypto_1 = require("./utils/crypto");
 const PreferencesService_1 = require("./services/PreferencesService");
 const SimpleQueueService_1 = require("./services/SimpleQueueService");
+const SystemHealthService_1 = require("./services/SystemHealthService");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
@@ -150,6 +151,43 @@ app.delete('/api/preferences', auth_1.authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Failed to reset preferences' });
     }
 });
+app.post('/api/system/reboot', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const result = await SystemHealthService_1.SystemHealthService.rebootRouter(req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to reboot router' });
+    }
+});
+app.get('/api/system/updates', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const updateInfo = await SystemHealthService_1.SystemHealthService.checkForUpdates(req.routerConfig);
+        res.json(updateInfo);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to check for updates' });
+    }
+});
+app.post('/api/system/updates/install', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const result = await SystemHealthService_1.SystemHealthService.installUpdates(req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to install updates' });
+    }
+});
 app.get('/api/interfaces', auth_1.authMiddleware, async (req, res) => {
     try {
         const interfaces = await BandwidthService_1.BandwidthService.getInterfaces(req.routerConfig);
@@ -172,6 +210,35 @@ app.post('/api/firewall/add', auth_1.authMiddleware, async (req, res) => {
     const { address, list, comment } = req.body;
     try {
         const result = await FirewallService_1.FirewallService.addToAddressList(address, list, req.routerConfig, comment);
+        res.json(result);
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.get('/api/firewall/addresses', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const entries = await FirewallService_1.FirewallService.getAddressListEntries(req.routerConfig);
+        res.json(entries);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch address entries' });
+    }
+});
+app.post('/api/firewall/addresses/move', auth_1.authMiddleware, async (req, res) => {
+    const { entryId, newList } = req.body;
+    try {
+        const result = await FirewallService_1.FirewallService.moveAddressToList(entryId, newList, req.routerConfig);
+        res.json(result);
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.delete('/api/firewall/addresses/:id', auth_1.authMiddleware, async (req, res) => {
+    const entryId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await FirewallService_1.FirewallService.removeAddressEntry(entryId, req.routerConfig);
         res.json(result);
     }
     catch (error) {

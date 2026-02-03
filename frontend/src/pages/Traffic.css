@@ -41,6 +41,21 @@
     background: rgba(0, 242, 255, 0.08);
 }
 
+.queues-card {
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 320px);
+}
+
+.queues-table-responsive {
+    overflow-y: auto;
+    overflow-x: auto;
+    flex: 1;
+    position: relative;
+}
+
 .traffic-header {
     display: flex;
     justify-content: space-between;
@@ -252,5 +267,144 @@
     .header-controls {
         width: 100%;
         justify-content: space-between;
+    }
+}
+
+/* Mobile-First Traffic Styles */
+@media (max-width: 480px) {
+    .traffic-page {
+        gap: 16px;
+    }
+
+    .page-tabs {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 2px;
+    }
+
+    .page-tabs .tab-button {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .traffic-header {
+        gap: 12px;
+    }
+
+    .header-title h2 {
+        font-size: 1.25rem;
+    }
+
+    .header-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .interface-selector {
+        width: 100%;
+    }
+
+    .interface-selector select {
+        width: 100%;
+        padding: 6px 12px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .traffic-stat-card {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .stat-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .stat-value {
+        font-size: 1.4rem;
+    }
+
+    .stat-value .unit {
+        font-size: 0.8rem;
+    }
+
+    .queues-card {
+        padding: 0.75rem;
+        max-height: calc(100vh - 280px);
+    }
+
+    .graph-container {
+        padding: 16px;
+    }
+
+    .graph-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .graph-header h3 {
+        font-size: 1rem;
+    }
+
+    .graph-legend {
+        gap: 12px;
+        font-size: 0.8rem;
+    }
+
+    .graph-wrapper {
+        height: 250px;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .traffic-page {
+        gap: 20px;
+    }
+
+    .page-tabs {
+        width: fit-content;
+    }
+
+    .page-tabs .tab-button {
+        padding: 9px 14px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+
+    .traffic-stat-card {
+        padding: 20px;
+    }
+
+    .graph-wrapper {
+        height: 300px;
+    }
+}
+
+@media (min-width: 769px) {
+    .traffic-header {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .header-controls {
+        width: auto;
+        justify-content: flex-end;
     }
 }

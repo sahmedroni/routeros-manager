@@ -369,3 +369,311 @@
         min-width: unset;
     }
 }
+
+.reboot-btn {
+    background: linear-gradient(90deg, rgba(255, 49, 49, 0.2), rgba(255, 49, 49, 0.1)) !important;
+    border: 1px solid rgba(255, 49, 49, 0.3) !important;
+    color: var(--accent-red) !important;
+}
+
+.reboot-btn:hover:not(:disabled) {
+    background: rgba(255, 49, 49, 0.3) !important;
+    box-shadow: 0 0 20px rgba(255, 49, 49, 0.3) !important;
+}
+
+.notification {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInUp 0.3s ease;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    min-width: 300px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.notification.success {
+    background: rgba(57, 255, 20, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(57, 255, 20, 0.3);
+}
+
+.notification.error {
+    background: rgba(255, 49, 49, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(255, 49, 49, 0.3);
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.update-initial {
+    text-align: center;
+    padding: 20px;
+}
+
+.update-initial .text-muted {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* center the Check for Updates button inside the card */
+.update-initial .login-btn {
+    margin: 12px auto 0;
+    display: inline-flex; /* ensure it centers and keeps icon alignment */
+}
+
+.update-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.version-comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+}
+
+.version-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.version-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.version-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+}
+
+.version-value.update-available {
+    color: var(--accent-green);
+}
+
+.version-arrow {
+    color: var(--text-muted);
+}
+
+.packages-list {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.packages-header {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.package-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.package-item:last-child {
+    border-bottom: none;
+}
+
+.package-name {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.package-version {
+    font-size: 0.85rem;
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+}
+
+.update-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.install-btn {
+    background: linear-gradient(90deg, rgba(57, 255, 20, 0.2), rgba(57, 255, 20, 0.1)) !important;
+    border: 1px solid rgba(57, 255, 20, 0.3) !important;
+    color: var(--accent-green) !important;
+}
+
+.install-btn:hover:not(:disabled) {
+    background: rgba(57, 255, 20, 0.3) !important;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3) !important;
+}
+
+/* Mobile-First Settings Styles */
+@media (max-width: 480px) {
+    .settings-container {
+        padding: 1rem;
+    }
+
+    .settings-header {
+        margin-bottom: 1rem;
+    }
+
+    .settings-container h1 {
+        font-size: 1.5rem;
+    }
+
+    .settings-container .subtitle {
+        font-size: 0.85rem;
+    }
+
+    .reboot-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .router-info-card,
+    .refresh-settings-card {
+        padding: 1rem;
+    }
+
+    .card-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .card-header h3 {
+        font-size: 0.95rem;
+    }
+
+    .info-list {
+        gap: 0.75rem;
+    }
+
+    .info-item {
+        padding: 10px 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .info-label {
+        font-size: 0.85rem;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+    }
+
+    .card-description {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .version-comparison {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .version-item {
+        padding: 8px;
+    }
+
+    .update-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .update-actions .login-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .install-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .packages-list {
+        padding: 10px;
+    }
+
+    .package-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .package-name {
+        font-size: 0.85rem;
+    }
+
+    .package-version {
+        font-size: 0.8rem;
+    }
+
+    .notification {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        min-width: unset;
+        width: calc(100% - 32px);
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .settings-container {
+        padding: 1.5rem;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+}
+
+@media (min-width: 769px) {
+    .settings-header {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+
+    .settings-grid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+}

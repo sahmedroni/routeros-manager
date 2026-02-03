@@ -247,6 +247,35 @@ function setupWebSocket(io) {
                 // Silently handle errors
             }
         });
+        socket.on('edit-node', async (data, ack) => {
+            try {
+                // support both id-based and legacy oldIp-based edits
+                if (data.id) {
+                    await NodeMonitorService_1.NodeMonitorService.editNode(data.id, data.ip, data.name);
+                }
+                else if (data.oldIp) {
+                    // legacy: find node by old IP then edit by id
+                    const nodes = await NodeMonitorService_1.NodeMonitorService.getNodes();
+                    const node = nodes.find(n => n.ip === data.oldIp);
+                    if (!node)
+                        throw new Error('Node not found');
+                    await NodeMonitorService_1.NodeMonitorService.editNode(node.id, data.ip, data.name);
+                }
+                else {
+                    throw new Error('Invalid edit payload');
+                }
+                const nodes = await NodeMonitorService_1.NodeMonitorService.getNodes();
+                socket.emit('node-stats', nodes);
+                if (typeof ack === 'function') {
+                    ack({ success: true });
+                }
+            }
+            catch (error) {
+                if (typeof ack === 'function') {
+                    ack({ success: false, error: error.message || 'Edit failed' });
+                }
+            }
+        });
         socket.on('disconnect', () => {
             console.log('Client disconnected:', socket.id);
             clearInterval(realTimeInterval);

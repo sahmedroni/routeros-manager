@@ -1,40 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Activity, Server, Wifi } from 'lucide-react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import InterfaceStatus from '../components/InterfaceStatus';
 import { useSocket } from '../hooks/useSocket';
 import './Dashboard.css';
 
-const MAX_LATENCY_POINTS = 8;
-
 const Dashboard = () => {
   const { nodes, interfaceStatus, systemLogs } = useSocket();
-  const [latencyHistory, setLatencyHistory] = useState({});
-
-  useEffect(() => {
-    if (!nodes || nodes.length === 0) {
-      setLatencyHistory({});
-      return;
-    }
-
-    setLatencyHistory(prev => {
-      const updated = { ...prev };
-      nodes.forEach(node => {
-        if (!updated[node.id]) {
-          updated[node.id] = [];
-        }
-        if (node.latency !== null) {
-          const now = new Date();
-          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          updated[node.id] = [
-            ...updated[node.id].slice(-MAX_LATENCY_POINTS),
-            { time: timeStr, latency: node.latency }
-          ];
-        }
-      });
-      return updated;
-    });
-  }, [nodes]);
 
   const getAlertType = (topics) => {
     if (!topics) return 'info';
@@ -83,28 +54,12 @@ const Dashboard = () => {
                 <div className="node-info-row">
                   <span className="info-label">Latency</span>
                   <span
-                    className="info-value latency-value"
+                    className="info-value latency-value latency-big"
                     style={{ color: getLatencyColor(node.latency) }}
                   >
                     {node.latency !== null ? `${node.latency} ms` : 'N/A'}
                   </span>
                 </div>
-
-                {node.status === 'online' && latencyHistory[node.id] && latencyHistory[node.id].length > 1 && (
-                  <div className="latency-graph-container">
-                    <ResponsiveContainer width="100%" height={20}>
-                      <LineChart data={latencyHistory[node.id]}>
-                        <Line
-                          type="monotone"
-                          dataKey="latency"
-                          stroke={getLatencyColor(node.latency)}
-                          strokeWidth={1.5}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
               </div>
 
               <div className="node-card-footer">

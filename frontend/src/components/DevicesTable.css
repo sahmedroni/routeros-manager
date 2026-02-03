@@ -159,6 +159,12 @@
 .table-wrapper {
     overflow-x: auto;
     margin-top: 16px;
+    position: relative;
+}
+
+.table-wrapper.has-overflow {
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
 }
 
 .devices-table {
@@ -285,7 +291,7 @@ tr:hover td {
 }
 
 .modal-content {
-    width: 400px;
+    width: 600px;
     padding: 32px;
     display: flex;
     flex-direction: column;
@@ -355,6 +361,18 @@ tr:hover td {
     opacity: 0.5;
 }
 
+/* Hide number input spin buttons specifically inside modals to ensure no arrows appear */
+.modal-content input[type="number"]::-webkit-outer-spin-button,
+.modal-content input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    display: none;
+    margin: 0;
+}
+
+.modal-content input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+
 .modal-actions {
     display: flex;
     gap: 12px;
@@ -401,5 +419,117 @@ tr:hover td {
 
     to {
         opacity: 1;
+    }
+}
+
+/* Mobile-First DevicesTable Styles */
+@media (max-width: 480px) {
+    .devices-container {
+        padding: 12px;
+        margin-top: 12px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .search-bar {
+        width: 100%;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        margin-top: 12px;
+    }
+
+    .devices-table {
+        min-width: 700px;
+    }
+
+    .devices-table th {
+        padding: 10px 8px;
+        font-size: 0.7rem;
+    }
+
+    .devices-table td {
+        padding: 12px 8px;
+        font-size: 0.85rem;
+    }
+
+    .pagination {
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+
+    .pagination-btn {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+    }
+
+    .page-info {
+        font-size: 0.75rem;
+    }
+
+    .modal-content {
+        width: 95vw;
+        max-width: 95vw;
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .modal-content h3 {
+        font-size: 1.1rem;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-actions button {
+        width: 100%;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .devices-container {
+        padding: 16px;
+        margin-top: 16px;
+    }
+
+    .card-header {
+        margin-bottom: 16px;
+    }
+
+    .header-actions {
+        gap: 12px;
+    }
+
+    .search-bar {
+        width: 220px;
+    }
+
+    .modal-content {
+        width: 80vw;
+        max-width: 80vw;
+        padding: 24px;
+    }
+}
+
+@media (min-width: 769px) {
+    .modal-content {
+        width: 600px;
+        max-width: 600px;
+        padding: 32px;
     }
 }

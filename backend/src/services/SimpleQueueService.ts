@@ -69,6 +69,9 @@ export class SimpleQueueService {
             if (message.includes('not enough permissions')) {
                 return { success: false, message: 'Permission denied: Ensure user has "write" and "policy" permissions' };
             }
+            if (message.includes('already have') || message.includes('already exists') || message.includes('duplicate')) {
+                return { success: false, message: `Queue with name "${data.name}" already exists` };
+            }
             return { success: false, message: message || 'Failed to create queue' };
         }
     }

@@ -150,6 +150,23 @@
     color: #ef4444;
 }
 
+.edit-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.edit-btn:hover {
+    opacity: 1;
+    color: var(--accent-cyan);
+}
+
 .node-details {
     display: flex;
     flex-direction: column;
@@ -218,6 +235,9 @@
     background: #10b981;
     color: #fff;
     padding: 0.8rem 2rem;
+    border-radius: 8px;
+    align-self: flex-end;
+    height: auto;
 }
 
 .btn-success:hover {
@@ -234,5 +254,104 @@
     .add-node-form form {
         flex-direction: column;
         align-items: stretch;
+    }
+}
+
+/* Mobile-First Nodes Styles */
+@media (max-width: 480px) {
+    .nodes-container {
+        padding: 1rem;
+    }
+
+    .nodes-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .nodes-header .display-font {
+        font-size: 1.25rem;
+    }
+
+    .nodes-header .subtitle {
+        font-size: 0.85rem;
+    }
+
+    .add-node-form {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .add-node-form form {
+        gap: 1rem;
+    }
+
+    .form-group {
+        gap: 0.4rem;
+    }
+
+    .form-group label {
+        font-size: 0.8rem;
+    }
+
+    .form-group input {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-success {
+        width: 100%;
+        padding: 0.7rem 1.5rem;
+    }
+
+    .nodes-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .node-card {
+        padding: 1rem;
+    }
+
+    .node-header {
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .node-name {
+        font-size: 1rem;
+    }
+
+    .node-details {
+        gap: 0.75rem;
+    }
+
+    .detail-item .label {
+        font-size: 0.85rem;
+    }
+
+    .detail-item .value {
+        font-size: 0.9rem;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .nodes-container {
+        padding: 1.5rem;
+    }
+
+    .nodes-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .add-node-form {
+        padding: 1.5rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .nodes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
     }
 }

@@ -72,9 +72,14 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
-    const emit = useCallback((event, data) => {
+    // emit supports optional acknowledgement callback as third arg
+    const emit = useCallback((event, data, ack) => {
         if (socketRef.current?.connected) {
-            socketRef.current.emit(event, data);
+            if (typeof ack === 'function') {
+                socketRef.current.emit(event, data, ack);
+            } else {
+                socketRef.current.emit(event, data);
+            }
         }
     }, []);
 
