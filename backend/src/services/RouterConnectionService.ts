@@ -13,6 +13,8 @@ export interface RouterConfig {
 export class RouterConnectionService {
     private static connections = new Map<string, RouterOSAPI>();
     private static connectionStates = new Map<string, boolean>();
+    private static failedConnections = new Map<string, { timestamp: number, message: string }>();
+    private static readonly COOLDOWN_MS = 30000; // 30 seconds cooldown
 
     private static getConnectionKey(config: RouterConfig): string {
         return `${config.user}@${config.host}:${config.port}`;
@@ -37,6 +39,12 @@ export class RouterConnectionService {
         }
 
         const key = this.getConnectionKey(finalConfig);
+
+        // Check for cooldown on failed connections
+        const failure = this.failedConnections.get(key);
+        if (failure && Date.now() - failure.timestamp < this.COOLDOWN_MS) {
+            throw new Error(`Connection to ${key} is in cooldown (previous error: ${failure.message})`);
+        }
 
         if (this.connections.has(key)) {
             return this.connections.get(key)!;
@@ -73,9 +81,25 @@ export class RouterConnectionService {
             });
 
             this.connections.set(key, api);
+            this.failedConnections.delete(key); // Clear any previous failure state on success
             return api;
-        } catch (error) {
-            console.error(`Failed to connect to MikroTik (${key}):`, error);
+        } catch (error: any) {
+            const errorMessage = error.message || 'Unknown error';
+
+            // Only log detailed failure if not recently logged for this key
+            const lastFailure = this.failedConnections.get(key);
+            if (!lastFailure || Date.now() - lastFailure.timestamp > this.COOLDOWN_MS) {
+                console.error(`Failed to connect to MikroTik (${key}):`, errorMessage);
+                if (error.errno === -4078) {
+                    console.warn(`TIP: Connection Refused. Check if API service is enabled on MikroTik and port ${finalConfig.port} is correct.`);
+                }
+            }
+
+            this.failedConnections.set(key, {
+                timestamp: Date.now(),
+                message: errorMessage
+            });
+
             this.connectionStates.set(key, false);
             throw error;
         } finally {

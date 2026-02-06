@@ -4,39 +4,39 @@
     "ip": "192.168.10.2",
     "name": "ESXi",
     "status": "online",
-    "latency": 3,
-    "lastChecked": 1770112244469
+    "latency": 4,
+    "lastChecked": 1770290115292
   },
   {
     "id": "1769923909655",
     "ip": "192.168.100.4",
-    "name": "Unify HO",
+    "name": "Unify HO Wifi",
     "status": "online",
-    "latency": 2,
-    "lastChecked": 1770112244469
+    "latency": 1,
+    "lastChecked": 1770290116657
   },
   {
     "id": "1769924086545",
     "ip": "192.168.0.8",
     "name": "INS Front",
     "status": "online",
-    "latency": 1,
-    "lastChecked": 1770112247025
+    "latency": 4,
+    "lastChecked": 1770290115298
   },
   {
     "id": "1769933738589",
     "ip": "8.8.8.8",
     "name": "Google DNS",
-    "status": "online",
-    "latency": 29,
-    "lastChecked": 1770112244506
+    "status": "offline",
+    "latency": null,
+    "lastChecked": 1770290115949
   },
   {
     "id": "1770108395427",
     "ip": "192.168.20.6",
     "name": "ERP VM",
     "status": "online",
-    "latency": 2,
-    "lastChecked": 1770112244480
+    "latency": 3,
+    "lastChecked": 1770290115304
   }
 ]

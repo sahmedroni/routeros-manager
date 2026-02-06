@@ -8,7 +8,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const Security = () => {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('rules');
-    
+
     const [rules, setRules] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -21,6 +21,7 @@ const Security = () => {
     const [notification, setNotification] = useState(null);
     const [moveTarget, setMoveTarget] = useState({});
     const [showMoveDropdown, setShowMoveDropdown] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchRules = async () => {
         try {
@@ -77,7 +78,7 @@ const Security = () => {
 
             if (response.ok) {
                 const entries = await response.json();
-                  setAddressEntries(entries.filter((e) => e.list === selectedList));
+                setAddressEntries(entries.filter((e) => e.list === selectedList));
                 setAddressesError(null);
             } else {
                 setAddressesError('Failed to fetch addresses');
@@ -186,6 +187,11 @@ const Security = () => {
             default: return 'text-info';
         }
     };
+
+    const filteredAddresses = addressEntries.filter(entry =>
+        (entry.address?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (entry.comment?.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
     const tabs = [
         { id: 'rules', label: 'Filter Rules', icon: Shield },
@@ -305,6 +311,29 @@ const Security = () => {
                                 <ChevronDown size={16} className="select-icon" />
                             </div>
                         </div>
+
+                        <div className="search-container">
+                            <div className="search-wrapper">
+                                <Search size={18} className="search-icon" />
+                                <input
+                                    type="text"
+                                    placeholder="Search IP or comment..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="search-input"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        className="clear-search"
+                                        onClick={() => setSearchTerm('')}
+                                        title="Clear search"
+                                    >
+                                        &times;
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
                         <button
                             className="btn btn-primary refresh-btn"
                             onClick={fetchAddressEntries}
@@ -346,7 +375,7 @@ const Security = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {addressEntries.map((entry) => (
+                                        {filteredAddresses.map((entry) => (
                                             <tr key={entry.id}>
                                                 <td className="font-mono">{entry.address}</td>
                                                 <td className="text-muted">{entry.comment || '-'}</td>
@@ -372,16 +401,16 @@ const Security = () => {
                                                             <div className="move-dropdown">
                                                                 <div className="dropdown-header">Move to list:</div>
                                                                 {addressLists
-                                            .filter(l => l !== selectedList)
-                                            .map(list => (
-                                                <button
-                                                    key={list}
-                                                    className="dropdown-item"
-                                                    onClick={() => handleMoveAddress(entry.id, list)}
-                                                >
-                                                    {list}
-                                                </button>
-                                            ))}
+                                                                    .filter(l => l !== selectedList)
+                                                                    .map(list => (
+                                                                        <button
+                                                                            key={list}
+                                                                            className="dropdown-item"
+                                                                            onClick={() => handleMoveAddress(entry.id, list)}
+                                                                        >
+                                                                            {list}
+                                                                        </button>
+                                                                    ))}
                                                             </div>
                                                         )}
                                                     </div>
