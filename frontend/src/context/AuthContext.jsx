@@ -19,10 +19,12 @@ export const AuthProvider = ({ children }) => {
     const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
 
     const checkSession = useCallback(async () => {
+        const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
         try {
-            const response = await fetch(`${BACKEND_URL}/api/me`, {
-                credentials: 'include'
-            });
+            const [response] = await Promise.all([
+                fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' }),
+                minDelay
+            ]);
 
             if (response.ok) {
                 const userData = await response.json();

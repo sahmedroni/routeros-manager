@@ -27,14 +27,16 @@
   --sidebar-width: 260px;
   --topbar-height: 70px;
 
-  --font-main: 'Rajdhani', sans-serif;
-  --font-display: 'Orbitron', sans-serif;
+  --font-main: 'TikTok Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'TikTok Sans', var(--font-main);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 body {
@@ -381,10 +383,13 @@ h4,
 }
 
 @keyframes swipe-hint {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
     opacity: 0.6;
   }
+
   50% {
     transform: translateX(5px);
     opacity: 1;
@@ -410,6 +415,7 @@ h4,
 
 /* Touch-friendly interactive elements on mobile */
 @media (max-width: 768px) {
+
   button,
   .btn,
   .action-btn {
