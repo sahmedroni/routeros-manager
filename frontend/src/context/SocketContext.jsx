@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const SocketContext = createContext(null);
+export const SocketContext = createContext(null);
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 export const SocketProvider = ({ children }) => {
@@ -95,10 +95,4 @@ export const SocketProvider = ({ children }) => {
     );
 };
 
-export const useSharedSocket = () => {
-    const context = useContext(SocketContext);
-    if (!context) {
-        throw new Error('useSharedSocket must be used within a SocketProvider');
-    }
-    return context;
-};
+

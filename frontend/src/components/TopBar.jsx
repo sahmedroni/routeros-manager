@@ -1,7 +1,7 @@
 import { User, Wifi, Cpu, Layers, LogOut, ChevronDown, Thermometer, Zap, RefreshCw, AlertCircle } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
 import { calculateMemoryUsage } from '../utils/utils';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import React, { useState, useEffect } from 'react';
 import './TopBar.css';
 
@@ -121,8 +121,8 @@ const TopBar = () => {
           </div>
         </div>
 
-        <div 
-          className="connection-status" 
+        <div
+          className="connection-status"
           style={{ cursor: connectionStatus === 'disconnected' ? 'pointer' : 'default' }}
           onClick={connectionStatus === 'disconnected' ? handleRefresh : undefined}
           title={connectionStatus === 'disconnected' ? 'Click to refresh' : ''}
@@ -131,8 +131,8 @@ const TopBar = () => {
             {getConnectionStatusIcon()}
           </div>
           <span className="connection-text" style={{ color: getConnectionStatusColor() }}>
-            {connectionStatus === 'connected' ? `${user?.host} : ${latencyText}` : 
-             connectionStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected (click to refresh)'}
+            {connectionStatus === 'connected' ? `${user?.host} : ${latencyText}` :
+              connectionStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected (click to refresh)'}
           </span>
         </div>
 

@@ -10,7 +10,7 @@ import Traffic from './pages/Traffic';
 import Login from './pages/Login';
 import Security from './pages/Security';
 import Settings from './pages/Settings';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from './hooks/useAuth';
 
 import './App.css';
 

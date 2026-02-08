@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Server, User, Lock, Globe, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './Login.css';
 
 const Login = () => {

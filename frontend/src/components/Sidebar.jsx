@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, Activity, Database, Shield, Server, Settings, ChevronLeft, ChevronRight, Menu, X, User, LogOut } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './Sidebar.css';
 
 const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) => {
@@ -66,11 +66,11 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
         )}
 
         <div className="sidebar-footer glass">
-            {isCollapsed && !isMobileOpen ? (
-              <div className={`router-status-dot ${isConnected ? 'online' : 'offline'}`} />
-            ) : (
-              <span className={`router-identity ${isConnected ? 'online' : 'offline'}`}>{identity}</span>
-            )}
+          {isCollapsed && !isMobileOpen ? (
+            <div className={`router-status-dot ${isConnected ? 'online' : 'offline'}`} />
+          ) : (
+            <span className={`router-identity ${isConnected ? 'online' : 'offline'}`}>{identity}</span>
+          )}
         </div>
 
         {isMobileOpen && (

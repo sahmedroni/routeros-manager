@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../hooks/useSocket';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { Server, Tag, Globe, User, Power, AlertCircle, CheckCircle, RefreshCw, Download, Package } from 'lucide-react';
 import './Settings.css';
 

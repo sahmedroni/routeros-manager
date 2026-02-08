@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../hooks/useSocket';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import './DevicesTable.css';
 
 const ITEMS_PER_PAGE = 15;

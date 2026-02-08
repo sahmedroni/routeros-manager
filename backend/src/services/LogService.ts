@@ -20,7 +20,10 @@ export class LogService {
 
             // Sort and take last N if needed, though MikroTik usually returns in order.
             // Let's just take the last 4.
-            return allLogs.slice(-limit).reverse().map((log: any) => ({
+            // If limit is 0, return all logs. Otherwise slice.
+            const logsToReturn = limit === 0 ? allLogs.reverse() : allLogs.slice(-limit).reverse();
+
+            return logsToReturn.map((log: any) => ({
                 id: log['.id'],
                 time: log.time,
                 topics: log.topics,

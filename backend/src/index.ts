@@ -16,6 +16,7 @@ import { encrypt } from './utils/crypto';
 import { PreferencesService } from './services/PreferencesService';
 import { SimpleQueueService } from './services/SimpleQueueService';
 import { SystemHealthService } from './services/SystemHealthService';
+import { LogService } from './services/LogService';
 
 dotenv.config();
 
@@ -174,6 +175,15 @@ app.delete('/api/preferences', authMiddleware, async (req, res) => {
         res.json(PreferencesService.getDefaultPreferences());
     } catch (error: any) {
         res.status(500).json({ error: 'Failed to reset preferences' });
+    }
+});
+
+app.get('/api/logs', authMiddleware, async (req, res) => {
+    try {
+        const logs = await LogService.getLogs(req.routerConfig, 0);
+        res.json(logs);
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch logs' });
     }
 });
 

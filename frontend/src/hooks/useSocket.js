@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSharedSocket } from '../context/SocketContext';
-import { useAuth } from '../context/AuthContext';
+import { useSharedSocket } from './useSharedSocket';
+import { useAuth } from './useAuth';
 
 const MAX_DATA_POINTS = 8;
 
