@@ -1,39 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Activity, Server, Wifi } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import InterfaceStatus from '../components/InterfaceStatus';
 import { useSocket } from '../hooks/useSocket';
 import './Dashboard.css';
 
-const MAX_LATENCY_POINTS = 20;
+const MAX_LATENCY_POINTS = 15;
 
 const Dashboard = () => {
   const { nodes, interfaceStatus, systemLogs } = useSocket();
   const [latencyHistory, setLatencyHistory] = useState({});
 
   useEffect(() => {
-    if (nodes && nodes.length > 0) {
-      setLatencyHistory(prev => {
-        const updated = { ...prev };
-        nodes.forEach(node => {
-          if (!updated[node.id]) {
-            updated[node.id] = [];
-          }
-          if (node.latency !== null) {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            updated[node.id] = [
-              ...updated[node.id],
-              { time: timeStr, latency: node.latency }
-            ];
-            if (updated[node.id].length > MAX_LATENCY_POINTS) {
-              updated[node.id] = updated[node.id].slice(-MAX_LATENCY_POINTS);
-            }
-          }
-        });
-        return updated;
-      });
+    if (!nodes || nodes.length === 0) {
+      setLatencyHistory({});
+      return;
     }
+
+    setLatencyHistory(prev => {
+      const updated = { ...prev };
+      nodes.forEach(node => {
+        if (!updated[node.id]) {
+          updated[node.id] = [];
+        }
+        if (node.latency !== null) {
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          updated[node.id] = [
+            ...updated[node.id].slice(-MAX_LATENCY_POINTS),
+            { time: timeStr, latency: node.latency }
+          ];
+        }
+      });
+      return updated;
+    });
   }, [nodes]);
 
   const getAlertType = (topics) => {

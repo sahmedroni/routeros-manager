@@ -8,6 +8,7 @@ import Devices from './pages/Devices';
 import Traffic from './pages/Traffic';
 import Login from './pages/Login';
 import Security from './pages/Security';
+import Settings from './pages/Settings';
 import { useAuth } from './context/AuthContext';
 
 import './App.css';
@@ -15,6 +16,7 @@ import './App.css';
 function App() {
   const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = React.useState('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   if (loading) {
     return (
@@ -42,6 +44,8 @@ function App() {
         return <Traffic />;
       case 'security':
         return <Security />;
+      case 'settings':
+        return <Settings />;
       default:
         return <Dashboard />;
     }
@@ -49,8 +53,13 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="main-content">
+      <Sidebar
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+      <main className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
         <TopBar />
         <div className="content-area">
           {renderPage()}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ArrowDown, ArrowUp, RefreshCw } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
 import './Traffic.css';
 
@@ -10,28 +10,28 @@ const Traffic = () => {
     const [selectedInterface, setSelectedInterface] = useState('ether1');
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchInterfaces = async () => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL.replace('/socket.io', '')}/api/interfaces`, {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    setInterfaces(data);
-                    const defaultInterface = data.find(i => i.name === 'bridge') || data[0];
-                    if (defaultInterface) {
-                        setSelectedInterface(defaultInterface.name);
-                        changeInterface(defaultInterface.name);
-                    }
+    const fetchInterfaces = async () => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_URL.replace('/socket.io', '')}/api/interfaces`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                setInterfaces(data);
+                const defaultInterface = data.find(i => i.name === 'bridge') || data[0];
+                if (defaultInterface) {
+                    setSelectedInterface(defaultInterface.name);
+                    changeInterface(defaultInterface.name);
                 }
-            } catch (error) {
-                console.error('Failed to fetch interfaces:', error);
-            } finally {
-                setIsLoading(false);
             }
-        };
+        } catch (error) {
+            console.error('Failed to fetch interfaces:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchInterfaces();
     }, []);
 
@@ -61,10 +61,6 @@ const Traffic = () => {
                             ))}
                         </select>
                     </div>
-                    <button className="refresh-btn" onClick={() => window.location.reload()}>
-                        <RefreshCw size={16} />
-                        Reset
-                    </button>
                 </div>
             </div>
 
