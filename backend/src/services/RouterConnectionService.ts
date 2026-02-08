@@ -64,7 +64,7 @@ export class RouterConnectionService {
                 user: finalConfig.user,
                 password: finalConfig.password,
                 port: finalConfig.port,
-                timeout: 5
+                timeout: 300
             });
 
             await api.connect();
