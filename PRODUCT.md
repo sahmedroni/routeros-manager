@@ -1,7 +1,7 @@
 # NETVOX - MikroTik Router Monitoring System
 
-**Version**: 1.0.0  
-**Last Updated**: February 2026  
+**Version**: 1.0.1  
+**Last Updated**: February 8, 2026  
 **Status**: Production Ready
 
 ---
@@ -104,10 +104,10 @@ Example: 8.8.8.8 (Google DNS)
 
 ### 5. Firewall Integration
 
-- View address lists
+- View address lists with intelligent numeric IP/CIDR sorting
 - Browse filter rules
-- Toggle rules on/off
-- Quick add to address lists
+- Toggle rules and address list entries on/off
+- Quick add/remove for address list management
 
 ### 6. Router Settings
 
@@ -115,6 +115,9 @@ View connected router information:
 - Identity name
 - Model and RouterOS version
 - Uptime
+- Current update channel and version status
+- Secure firmware updates with mandatory password verification modal
+- Asynchronous update discovery with improved status polling
 - API connection details
 
 ---

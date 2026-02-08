@@ -14,6 +14,8 @@ const Settings = () => {
     const [updateInfo, setUpdateInfo] = useState(null);
     const [checkingUpdates, setCheckingUpdates] = useState(false);
     const [installingUpdates, setInstallingUpdates] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [verifyPassword, setVerifyPassword] = useState('');
 
     const formatUptime = (uptime) => {
         if (!uptime || uptime === 'N/A') return 'N/A';
@@ -51,7 +53,15 @@ const Settings = () => {
     };
 
     const installUpdates = async () => {
-        if (!window.confirm('Install updates? The router will reboot after installation. Continue?')) {
+        if (!window.confirm('The router will reboot after installation. Continue?')) {
+            return;
+        }
+        setShowPasswordModal(true);
+    };
+
+    const handleConfirmInstall = async () => {
+        if (!verifyPassword) {
+            showNotification('Password is required to install updates', 'error');
             return;
         }
 
@@ -59,13 +69,19 @@ const Settings = () => {
             setInstallingUpdates(true);
             const response = await fetch(`${BACKEND_URL}/api/system/updates/install`, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password: verifyPassword }),
                 credentials: 'include'
             });
 
             const result = await response.json();
 
-            if (result.success) {
+            if (response.ok && result.success) {
                 showNotification('Update installed. Router is rebooting...', 'success');
+                setShowPasswordModal(false);
+                setVerifyPassword('');
             } else {
                 showNotification(result.error || 'Failed to install updates', 'error');
             }
@@ -116,8 +132,8 @@ const Settings = () => {
                     <h1 className="display-font">Settings</h1>
                     <p className="subtitle">Configure and manage your router</p>
                 </div>
-                <button 
-                    className="login-btn reboot-btn" 
+                <button
+                    className="login-btn reboot-btn"
                     onClick={handleReboot}
                     disabled={isRebooting}
                     style={{ height: '40px', padding: '0 20px' }}
@@ -220,7 +236,12 @@ const Settings = () => {
                                 </div>
                             </div>
 
-                            {updateInfo.hasUpdate && updateInfo.packages.length > 0 && (
+                            <div className="version-item" style={{ marginTop: '12px' }}>
+                                <span className="version-label">Channel</span>
+                                <span className="version-value" style={{ textTransform: 'capitalize' }}>{updateInfo.channel}</span>
+                            </div>
+
+                            {updateInfo.hasUpdate && updateInfo.packages && updateInfo.packages.length > 0 && (
                                 <div className="packages-list">
                                     <div className="packages-header">Packages to update:</div>
                                     {updateInfo.packages.filter(p => p.status === 'pending').map((pkg, idx) => (
@@ -233,8 +254,8 @@ const Settings = () => {
                             )}
 
                             <div className="update-actions">
-                                <button 
-                                    className="login-btn" 
+                                <button
+                                    className="login-btn"
                                     onClick={checkForUpdates}
                                     disabled={checkingUpdates}
                                     style={{ height: '40px', padding: '0 20px' }}
@@ -244,8 +265,8 @@ const Settings = () => {
                                 </button>
 
                                 {updateInfo.hasUpdate && (
-                                    <button 
-                                        className="login-btn install-btn" 
+                                    <button
+                                        className="login-btn install-btn"
                                         onClick={installUpdates}
                                         disabled={installingUpdates}
                                         style={{ height: '40px', padding: '0 20px' }}
@@ -259,8 +280,8 @@ const Settings = () => {
                     ) : (
                         <div className="update-initial">
                             <p className="text-muted">Click to check for available updates</p>
-                            <button 
-                                className="login-btn" 
+                            <button
+                                className="login-btn"
                                 onClick={checkForUpdates}
                                 disabled={checkingUpdates}
                                 style={{ height: '40px', padding: '0 20px', marginTop: '12px' }}
@@ -272,6 +293,51 @@ const Settings = () => {
                     )}
                 </div>
             </div>
+
+            {showPasswordModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>Verify Password</h3>
+                        <p>Please enter your RouterOS password to confirm and install the update.</p>
+
+                        <div className="password-input-group">
+                            <input
+                                type="password"
+                                className="password-input"
+                                placeholder="RouterOS Password"
+                                value={verifyPassword}
+                                onChange={(e) => setVerifyPassword(e.target.value)}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !installingUpdates && verifyPassword) {
+                                        handleConfirmInstall();
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        <div className="modal-actions">
+                            <button
+                                className="modal-btn cancel"
+                                onClick={() => {
+                                    setShowPasswordModal(false);
+                                    setVerifyPassword('');
+                                }}
+                                disabled={installingUpdates}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="modal-btn confirm"
+                                onClick={handleConfirmInstall}
+                                disabled={installingUpdates || !verifyPassword}
+                            >
+                                {installingUpdates ? 'Installing...' : 'Confirm & Install'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

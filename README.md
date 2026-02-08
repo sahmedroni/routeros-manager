@@ -7,7 +7,7 @@ A modern real-time dashboard for monitoring MikroTik routers running RouterOS 7.
 - **Dashboard** - Real-time CPU, RAM, Temperature, Voltage monitoring with live updates
 - **Traffic** - Live RX/TX bandwidth monitoring with interface selection
 - **Nodes** - Monitor custom network endpoints with ping latency graphs
-- **Security** - View and manage firewall address lists and filter rules
+- **Security** - Manage firewall address lists (add/remove/toggle) and filter rules with numeric IP sorting
 - **Devices** - View connected DHCP clients and device information
 - **Settings** - View connected router information
 - **Collapsible Sidebar** - Maximize screen space when needed
@@ -226,13 +226,15 @@ See [SECURITY.md](./SECURITY.md) for detailed security information.
 | GET | `/api/firewall/lists` | Get address lists (requires auth) |
 | GET | `/api/firewall/rules` | Get filter rules (requires auth) |
 | POST | `/api/firewall/add` | Add IP to address list (requires auth) |
-| POST | `/api/firewall/toggle` | Enable/disable rule (requires auth) |
+| POST | `/api/firewall/addresses/toggle` | Enable/disable address entry (requires auth) |
+| POST | `/api/firewall/toggle` | Enable/disable filter rule (requires auth) |
 
 ### Health
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/health` | Server health check (no auth) |
+| POST | `/api/system/updates/install` | Install updates (requires auth & password) |
 
 ## WebSocket Events
 

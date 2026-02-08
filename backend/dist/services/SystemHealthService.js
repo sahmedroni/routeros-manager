@@ -143,24 +143,28 @@ class SystemHealthService {
     static async checkForUpdates(config) {
         try {
             const api = await RouterConnectionService_1.RouterConnectionService.getConnection(config);
+            // Trigger check-for-updates
+            await api.write(['/system/package/update/check-for-updates']);
+            // Poll for result (max 5 attempts, 1s apart)
+            let info = {};
+            for (let i = 0; i < 5; i++) {
+                const updateInfoRaw = await api.write(['/system/package/update/print']);
+                info = updateInfoRaw[0] || {};
+                // terminal states: "New version is available" or "System is already up to date"
+                if (info.status !== 'finding out latest version...') {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            // console.log('Terminal Update Check Response:', JSON.stringify(info, null, 2));
             const systemResource = await api.write(['/system/resource/print']);
             const currentVersion = systemResource[0]?.version || 'Unknown';
-            const packages = await api.write(['/system/package/update/print']);
-            let latestVersion = currentVersion;
-            const updateInfo = packages.find((p) => p.status === 'pending');
-            if (updateInfo) {
-                latestVersion = updateInfo['latest-version'] || currentVersion;
-            }
             return {
-                hasUpdate: updateInfo?.status === 'pending',
+                hasUpdate: info.status === 'New version is available',
                 currentVersion,
-                latestVersion,
-                packages: packages.map((p) => ({
-                    name: p.name,
-                    version: p.version,
-                    latestVersion: p['latest-version'],
-                    status: p.status
-                }))
+                latestVersion: info['latest-version'] || currentVersion,
+                channel: info.channel || 'stable',
+                packages: []
             };
         }
         catch (error) {
@@ -169,6 +173,7 @@ class SystemHealthService {
                 hasUpdate: false,
                 currentVersion: 'Unknown',
                 latestVersion: 'Unknown',
+                channel: 'Unknown',
                 packages: []
             };
         }

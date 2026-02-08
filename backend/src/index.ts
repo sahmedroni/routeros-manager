@@ -200,6 +200,17 @@ app.get('/api/system/updates', authMiddleware, async (req, res) => {
 });
 
 app.post('/api/system/updates/install', authMiddleware, async (req, res) => {
+    const { password } = req.body;
+
+    if (!password) {
+        return res.status(400).json({ error: 'Password is required' });
+    }
+
+    // Verify password against the current router configuration
+    if (!req.routerConfig || password !== req.routerConfig.password) {
+        return res.status(401).json({ error: 'Invalid RouterOS password' });
+    }
+
     try {
         const result = await SystemHealthService.installUpdates(req.routerConfig);
         if (result.success) {
