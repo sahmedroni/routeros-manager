@@ -94,17 +94,16 @@ class SystemHealthService {
                     psuState: health['psu-state'] || null,
                     psu1State: health['psu1-state'] || null,
                     psu2State: health['psu2-state'] || null,
-                    raw: health // Include everything just in case
+                    raw: health
                 }
             };
         }
         catch (error) {
             console.warn('Using Mock Data for System Health due to connection error.');
-            // Mock Data
             return {
                 cpuUsage: Math.floor(Math.random() * 20) + 5,
-                totalMemory: 1073741824, // 1GB
-                freeMemory: 536870912, // 512MB
+                totalMemory: 1073741824,
+                freeMemory: 536870912,
                 uptime: '2d 14h 32m',
                 model: 'RB5009 (Simulated)',
                 identity: 'MikroTik-Simulated',
@@ -124,6 +123,77 @@ class SystemHealthService {
                     raw: {}
                 }
             };
+        }
+    }
+    static async rebootRouter(config) {
+        try {
+            const api = await RouterConnectionService_1.RouterConnectionService.getConnection(config);
+            await api.write(['/system/reboot']);
+            return { success: true, message: 'Router is rebooting...' };
+        }
+        catch (error) {
+            console.error('Error rebooting router:', error);
+            const message = error.message || '';
+            if (message.includes('not enough permissions')) {
+                return { success: false, message: 'Permission denied: Ensure user has "write" and "policy" permissions.' };
+            }
+            return { success: false, message: message || 'Failed to reboot router' };
+        }
+    }
+    static async checkForUpdates(config) {
+        try {
+            const api = await RouterConnectionService_1.RouterConnectionService.getConnection(config);
+            // Trigger check-for-updates
+            await api.write(['/system/package/update/check-for-updates']);
+            // Poll for result (max 5 attempts, 1s apart)
+            let info = {};
+            for (let i = 0; i < 5; i++) {
+                const updateInfoRaw = await api.write(['/system/package/update/print']);
+                info = updateInfoRaw[0] || {};
+                // terminal states: "New version is available" or "System is already up to date"
+                if (info.status !== 'finding out latest version...') {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            // console.log('Terminal Update Check Response:', JSON.stringify(info, null, 2));
+            const systemResource = await api.write(['/system/resource/print']);
+            const currentVersion = systemResource[0]?.version || 'Unknown';
+            return {
+                hasUpdate: info.status === 'New version is available',
+                currentVersion,
+                latestVersion: info['latest-version'] || currentVersion,
+                channel: info.channel || 'stable',
+                packages: []
+            };
+        }
+        catch (error) {
+            console.error('Error checking for updates:', error);
+            return {
+                hasUpdate: false,
+                currentVersion: 'Unknown',
+                latestVersion: 'Unknown',
+                channel: 'Unknown',
+                packages: []
+            };
+        }
+    }
+    static async installUpdates(config) {
+        try {
+            const api = await RouterConnectionService_1.RouterConnectionService.getConnection(config);
+            await api.write(['/system/package/update/install']);
+            return { success: true, message: 'Installing updates. Router will reboot when complete.' };
+        }
+        catch (error) {
+            console.error('Error installing updates:', error);
+            const message = error.message || '';
+            if (message.includes('not enough permissions')) {
+                return { success: false, message: 'Permission denied: Ensure user has "write" and "policy" permissions.' };
+            }
+            if (message.includes('no such command')) {
+                return { success: false, message: 'Update feature not available or no updates pending.' };
+            }
+            return { success: false, message: message || 'Failed to install updates' };
         }
     }
 }

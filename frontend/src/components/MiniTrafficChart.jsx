@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
+import React, { useState, useEffect, memo } from 'react';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import './MiniTrafficChart.css';
 
-const MAX_DATA_POINTS = 20;
+const MAX_DATA_POINTS = 10;
 
-const MiniTrafficChart = ({ data }) => {
+const MiniTrafficChart = memo(({ data }) => {
     const [history, setHistory] = useState([]);
 
     useEffect(() => {
         if (data) {
             const newDataPoint = {
-                rx: Math.round(data.rx / 1024 / 1024 * 100) / 100, // Mbps
-                tx: Math.round(data.tx / 1024 / 1024 * 100) / 100, // Mbps
+                rx: Math.round(data.rx / 1024 / 1024 * 100) / 100,
+                tx: Math.round(data.tx / 1024 / 1024 * 100) / 100,
             };
 
             setHistory(prev => {
@@ -38,14 +38,6 @@ const MiniTrafficChart = ({ data }) => {
                             <stop offset="95%" stopColor="var(--accent-magenta)" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'rgba(5, 5, 7, 0.9)',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: '4px',
-                            fontSize: '10px'
-                        }}
-                    />
                     <Area
                         type="monotone"
                         dataKey="rx"
@@ -68,6 +60,6 @@ const MiniTrafficChart = ({ data }) => {
             </ResponsiveContainer>
         </div>
     );
-};
+});
 
 export default MiniTrafficChart;

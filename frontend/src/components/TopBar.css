@@ -214,9 +214,145 @@
     gap: 8px;
     font-family: var(--font-display);
     font-size: 0.75rem;
-    color: var(--text-secondary);
     padding: 4px 12px;
     background: rgba(57, 255, 20, 0.05);
     border-radius: 20px;
     border: 1px solid rgba(57, 255, 20, 0.1);
+    transition: all 0.3s ease;
+}
+
+.connection-status:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.connection-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.connection-text {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.connection-status.disconnected {
+    background: rgba(255, 76, 60, 0.1);
+    border-color: rgba(255, 76, 60, 0.2);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+.connection-status.reconnecting {
+    background: rgba(255, 165, 0, 0.1);
+    border-color: rgba(255, 165, 0, 0.2);
+}
+
+@keyframes pulse-red {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 76, 60, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 10px 2px rgba(255, 76, 60, 0.2);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Mobile-First TopBar */
+@media (max-width: 768px) {
+    .topbar {
+        height: auto;
+        min-height: 60px;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .topbar-title {
+        display: none;
+    }
+
+    .topbar-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .system-metrics {
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+        margin-right: 0;
+    }
+
+    .metric-item {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+        flex: 1;
+        min-width: calc(25% - 6px);
+        justify-content: center;
+    }
+
+    .metric-label {
+        display: none;
+    }
+
+    .metric-value {
+        font-size: 0.75rem;
+    }
+
+    .connection-status {
+        width: 100%;
+        justify-content: center;
+        padding: 8px 12px;
+    }
+
+    .connection-text {
+        font-size: 0.7rem;
+    }
+
+    .user-profile-container {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar {
+        padding: 10px 12px;
+    }
+
+    .topbar-title {
+        font-size: 1rem;
+    }
+
+    .system-metrics {
+        gap: 4px;
+    }
+
+    .metric-item {
+        min-width: calc(25% - 3px);
+        padding: 4px 6px;
+    }
+
+    .metric-item svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+@media (min-width: 769px) {
+    .topbar {
+        padding: 0 32px;
+    }
 }

@@ -1,46 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useSocket } from '../hooks/useSocket';
 import './Nodes.css';
 
-const MAX_LATENCY_POINTS = 15;
-
 const Nodes = () => {
-    const { nodes, addNode, removeNode } = useSocket();
-    const [latencyHistory, setLatencyHistory] = useState({});
+    const { nodes, addNode, removeNode, editNode } = useSocket();
 
-    useEffect(() => {
-        if (!nodes || nodes.length === 0) {
-            setLatencyHistory({});
-            return;
-        }
-
-        setLatencyHistory(prev => {
-            const updated = { ...prev };
-            nodes.forEach(node => {
-                if (!updated[node.id]) {
-                    updated[node.id] = [];
-                }
-                if (node.latency !== null) {
-                    const now = new Date();
-                    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    updated[node.id] = [
-                        ...updated[node.id].slice(-MAX_LATENCY_POINTS),
-                        { time: timeStr, latency: node.latency }
-                    ];
-                }
-            });
-            return updated;
-        });
-    }, [nodes]);
+    // live latency history/graph removed
 
     const [newNodeIp, setNewNodeIp] = useState('');
     const [newNodeName, setNewNodeName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
+    const [editingNodeId, setEditingNodeId] = useState(null);
+
 
     const handleAddNode = (e) => {
         e.preventDefault();
-        if (newNodeIp && newNodeName) {
+        if (!newNodeIp || !newNodeName) return;
+
+        if (editingNodeId) {
+            // editing existing node by id (more robust)
+            console.log('Submitting edit for node id=', editingNodeId, 'payload=', { ip: newNodeIp, name: newNodeName });
+            editNode(editingNodeId, newNodeIp, newNodeName, (response) => {
+                console.log('Edit ack received', response);
+                if (!response || !response.success) {
+                    alert(response?.error || 'Failed to edit node');
+                    // keep form open for retry
+                } else {
+                    // success: clear form
+                    alert('Node updated');
+                    setNewNodeIp('');
+                    setNewNodeName('');
+                    setIsAdding(false);
+                    setEditingNodeId(null);
+                }
+            });
+        } else {
+            console.log('Adding node', { ip: newNodeIp, name: newNodeName });
             addNode(newNodeIp, newNodeName);
             setNewNodeIp('');
             setNewNodeName('');
@@ -52,6 +47,13 @@ const Nodes = () => {
         if (window.confirm(`Are you sure you want to remove node ${ip}?`)) {
             removeNode(ip);
         }
+    };
+
+    const handleEditNode = (node) => {
+        setEditingNodeId(node.id);
+        setNewNodeIp(node.ip);
+        setNewNodeName(node.name);
+        setIsAdding(true);
     };
 
     return (
@@ -98,25 +100,34 @@ const Nodes = () => {
             )}
 
             <div className="nodes-grid">
-                {(!nodes || nodes.length === 0) ? (
-                    <div className="glass-card empty-state">
-                        <p>No custom nodes added yet.</p>
-                        <p className="small">Add an IP address to start monitoring its latency and status.</p>
-                    </div>
-                ) : (
-                    nodes.map((node) => (
-                        <div key={node.id} className={`glass-card node-card ${node.status}`}>
-                            <div className="node-header">
-                                <span className={`status-indicator ${node.status}`}></span>
-                                <h3 className="node-name">{node.name}</h3>
-                                <button
-                                    className="btn-icon delete-btn"
-                                    onClick={() => handleRemoveNode(node.ip)}
-                                    title="Remove Node"
-                                >
-                                    ×
-                                </button>
+                        {(!nodes || nodes.length === 0) ? (
+                            <div className="glass-card empty-state">
+                                <p>No custom nodes added yet.</p>
+                                <p className="small">Add an IP address to start monitoring its latency and status.</p>
                             </div>
+                        ) : (
+                            nodes.map((node) => (
+                                <div key={node.id} className={`glass-card node-card ${node.status}`}>
+                                    <div className="node-header">
+                                        <span className={`status-indicator ${node.status}`}></span>
+                                        <h3 className="node-name">{node.name}</h3>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                className="btn-icon delete-btn"
+                                                onClick={() => handleRemoveNode(node.ip)}
+                                                title="Remove Node"
+                                            >
+                                                ×
+                                            </button>
+                                            <button
+                                                className="btn-icon edit-btn"
+                                                onClick={() => handleEditNode(node)}
+                                                title="Edit Node"
+                                            >
+                                                ✎
+                                            </button>
+                                        </div>
+                                    </div>
                             <div className="node-details">
                                 <div className="detail-item">
                                     <span className="label">IP Address</span>
@@ -135,21 +146,7 @@ const Nodes = () => {
                                     </span>
                                 </div>
                             </div>
-                            {node.status === 'online' && latencyHistory[node.id] && latencyHistory[node.id].length > 1 && (
-                                <div className="node-chart-mini">
-                                    <ResponsiveContainer width="100%" height={60}>
-                                        <LineChart data={latencyHistory[node.id]}>
-                                            <Line
-                                                type="monotone"
-                                                dataKey="latency"
-                                                stroke="#10b981"
-                                                strokeWidth={2}
-                                                dot={false}
-                                            />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            )}
+                            {/* live graph removed */}
                         </div>
                     ))
                 )}

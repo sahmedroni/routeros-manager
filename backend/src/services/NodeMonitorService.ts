@@ -82,6 +82,30 @@ export class NodeMonitorService {
         await this.saveNodes();
     }
 
+    public static async editNode(id: string, ip: string, name: string): Promise<Node> {
+        await this.init();
+
+        const node = this.nodes.find(n => n.id === id);
+        if (!node) {
+            throw new Error('Node not found');
+        }
+
+        // If IP is changing, ensure new IP does not collide with another node
+        if (node.ip !== ip) {
+            const existing = this.nodes.find(n => n.ip === ip && n.id !== id);
+            if (existing) {
+                throw new Error('Another node with the provided IP already exists');
+            }
+        }
+
+        node.ip = ip;
+        node.name = name;
+        node.lastChecked = Date.now();
+
+        await this.saveNodes();
+        return node;
+    }
+
     public static async monitorNodes(): Promise<Node[]> {
         await this.init();
 

@@ -289,9 +289,120 @@
     box-shadow: 0 0 10px var(--accent-red);
 }
 
+
+.status-indicator.online {
+    background: var(--accent-green);
+    box-shadow: 0 0 10px var(--accent-green);
+}
+
+.status-indicator.offline {
+    background: var(--accent-red);
+    box-shadow: 0 0 10px var(--accent-red);
+}
+
 .status-indicator.pending {
     background: var(--accent-orange);
     box-shadow: 0 0 10px var(--accent-orange);
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(0.95);
+        opacity: 0.5;
+    }
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.modal-body.log-list {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.loading-spinner {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
 }
 
 @keyframes pulse-status {
@@ -364,13 +475,14 @@
     font-family: var(--font-display);
 }
 
+.latency-big {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
 .latency-graph-container {
-    width: 100%;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 4px;
+    display: none;
+    /* graphs removed from dashboard */
 }
 
 .node-card-footer {
@@ -421,5 +533,145 @@
 @media (max-width: 768px) {
     .nodes-dashboard-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile-First Dashboard Styles */
+@media (max-width: 480px) {
+    .dashboard-container {
+        gap: 16px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .subtitle {
+        font-size: 0.85rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .alerts-container {
+        padding: 16px;
+    }
+
+    .card-header {
+        margin-bottom: 16px;
+    }
+
+    .card-header h3 {
+        font-size: 1rem;
+    }
+
+    .alerts-list {
+        max-height: 300px;
+        gap: 12px;
+    }
+
+    .alert-item {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .alert-msg {
+        font-size: 0.85rem;
+    }
+
+    .alert-time {
+        font-size: 0.7rem;
+    }
+
+    .traffic-mini-container {
+        padding: 16px;
+        min-height: 180px;
+    }
+
+    .traffic-summary {
+        gap: 12px;
+        font-size: 0.8rem;
+    }
+
+    .nodes-dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .node-dashboard-card {
+        padding: 12px;
+    }
+
+    .node-name {
+        font-size: 0.85rem;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+    }
+
+    .latency-big {
+        font-size: 1.1rem;
+    }
+
+    .status-badge {
+        font-size: 0.55rem;
+        padding: 2px 6px;
+    }
+
+    .empty-state {
+        padding: 40px 16px;
+        gap: 12px;
+    }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+    .dashboard-container {
+        gap: 24px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .nodes-dashboard-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+
+    .dashboard-grid {
+        gap: 20px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nodes-dashboard-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (min-width: 1281px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .nodes-dashboard-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     }
 }

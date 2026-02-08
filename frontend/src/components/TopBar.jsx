@@ -1,16 +1,26 @@
-import { User, Wifi, Cpu, Layers, LogOut, ChevronDown, Thermometer, Zap } from 'lucide-react';
+import { User, Wifi, Cpu, Layers, LogOut, ChevronDown, Thermometer, Zap, RefreshCw, AlertCircle } from 'lucide-react';
 import { useSocket } from '../hooks/useSocket';
 import { calculateMemoryUsage } from '../utils/utils';
-import { useAuth } from '../context/AuthContext';
-import React, { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import React, { useState, useEffect } from 'react';
 import './TopBar.css';
 
 const TopBar = () => {
-  const { pingLatency, realtimeStats } = useSocket();
-  const { logout, user } = useAuth();
+  const { pingLatency, realtimeStats, isConnected } = useSocket();
+  const { logout, user, isReconnecting } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('connected');
 
-  // Determine latency color based on value
+  useEffect(() => {
+    if (!isConnected && !isReconnecting) {
+      setConnectionStatus('disconnected');
+    } else if (isReconnecting) {
+      setConnectionStatus('reconnecting');
+    } else {
+      setConnectionStatus('connected');
+    }
+  }, [isConnected, isReconnecting]);
+
   const getLatencyColor = (latency) => {
     if (!latency) return 'var(--text-muted)';
     if (latency < 50) return 'var(--accent-green)';
@@ -37,14 +47,12 @@ const TopBar = () => {
   const getVoltageColor = (voltage) => {
     if (voltage === '--' || voltage === null) return 'var(--text-muted)';
     const val = parseFloat(voltage);
-    // Typical safe range for MikroTik routers is around 12V or 24V (±10%)
     if (val >= 11 && val <= 26) return 'var(--accent-green)';
     if (val >= 10 && val <= 28) return 'var(--accent-orange)';
     return 'var(--accent-red)';
   };
 
   const latencyValue = pingLatency?.primary ?? null;
-  const latencyColor = getLatencyColor(latencyValue);
   const latencyText = latencyValue !== null ? `${latencyValue}ms` : 'Checking...';
 
   const cpuUsage = realtimeStats?.cpuUsage ?? '--';
@@ -52,6 +60,28 @@ const TopBar = () => {
   const temperature = realtimeStats?.health?.temperature ?? '--';
   const voltage = realtimeStats?.health?.voltage ?? '--';
   const userName = realtimeStats?.user || user?.user || 'Admin';
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
+  const getConnectionStatusColor = () => {
+    switch (connectionStatus) {
+      case 'connected': return 'var(--accent-green)';
+      case 'reconnecting': return 'var(--accent-orange)';
+      case 'disconnected': return 'var(--accent-red)';
+      default: return 'var(--text-muted)';
+    }
+  };
+
+  const getConnectionStatusIcon = () => {
+    switch (connectionStatus) {
+      case 'connected': return <Wifi size={16} />;
+      case 'reconnecting': return <RefreshCw size={16} className="spin" />;
+      case 'disconnected': return <AlertCircle size={16} />;
+      default: return <Wifi size={16} />;
+    }
+  };
 
   return (
     <header className="topbar glass">
@@ -91,9 +121,19 @@ const TopBar = () => {
           </div>
         </div>
 
-        <div className="connection-status">
-          <Wifi size={16} color={latencyColor} />
-          <span>{user?.host} : {latencyText}</span>
+        <div
+          className="connection-status"
+          style={{ cursor: connectionStatus === 'disconnected' ? 'pointer' : 'default' }}
+          onClick={connectionStatus === 'disconnected' ? handleRefresh : undefined}
+          title={connectionStatus === 'disconnected' ? 'Click to refresh' : ''}
+        >
+          <div className="connection-icon" style={{ color: getConnectionStatusColor() }}>
+            {getConnectionStatusIcon()}
+          </div>
+          <span className="connection-text" style={{ color: getConnectionStatusColor() }}>
+            {connectionStatus === 'connected' ? `${user?.host} : ${latencyText}` :
+              connectionStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected (click to refresh)'}
+          </span>
         </div>
 
         <div className="user-profile-container">

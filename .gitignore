@@ -15,3 +15,9 @@ build/
 # Logs
 *.log
 npm-debug.log*
+
+# Preferences (user-specific settings)
+preferences.json
+nodes.json
+backend/.env.example
+

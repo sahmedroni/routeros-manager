@@ -10,14 +10,12 @@ export class FirewallService {
     public static async addToAddressList(address: string, listName: string, config?: RouterConfig, comment?: string) {
         const api = await RouterConnectionService.getConnection(config);
 
-        // Basic validation
         if (!address || !listName) {
             throw new Error('Address and List Name are required');
         }
 
-        // Security validation
-        const ipRegex = /^[0-9a-fA-F:./]+$/; // Basic IPv4/IPv6 CIDR characters
-        const safeStringRegex = /^[a-zA-Z0-9_\-.\s]+$/; // Alphanumeric, underscore, dash, dot, space
+        const ipRegex = /^[0-9a-fA-F:./]+$/;
+        const safeStringRegex = /^[a-zA-Z0-9_\-.\s]+$/;
 
         if (!ipRegex.test(address)) {
             throw new Error('Invalid IP Address format');
@@ -37,41 +35,42 @@ export class FirewallService {
                 `=comment=${safeComment}`
             ]);
 
-            // Invalidate cache when a new entry is added
             this.invalidateCache();
 
             return { success: true, message: `Added ${address} to ${listName}` };
         } catch (error: any) {
             console.error('Firewall API Error:', error);
-            const message = error.message || '';
-            if (message.includes('not enough permissions')) {
+            const message = error.message || error.toString() || '';
+            const lowerMessage = message.toLowerCase();
+
+            if (lowerMessage.includes('not enough permissions') || lowerMessage.includes('no such command')) {
                 throw new Error('Permission Denied: Ensure MikroTik user has "write" and "policy" permissions.');
+            }
+            if (lowerMessage.includes('already') && (lowerMessage.includes('entry') || lowerMessage.includes('list'))) {
+                throw new Error(`Address "${address}" already exists in list "${listName}"`);
+            }
+            if (lowerMessage.includes('failure')) {
+                const match = message.match(/failure:\s*(.+)/i);
+                throw new Error(match ? match[1].trim() : 'Operation failed');
             }
             throw new Error(message || 'Failed to add to firewall address list');
         }
     }
 
     public static async getAddressLists(config?: RouterConfig) {
-        // Check if cache exists (session-based, no expiration)
         if (this.addressListCache) {
-            console.log('Returning cached address lists (session cache)');
             return this.addressListCache.data;
         }
 
-        console.log('Fetching fresh address lists from MikroTik');
         const api = await RouterConnectionService.getConnection(config);
 
-        // Only fetch the 'list' field to reduce data transfer
         const lists = await api.write([
             '/ip/firewall/address-list/print',
-            '?#',  // Query all entries
-            '=.proplist=list'  // Only return the 'list' property
+            '=.proplist=list'
         ]);
 
-        // Get unique list names
         const uniqueNames = Array.from(new Set(lists.map((l: any) => l.list)));
 
-        // Update cache (persists for entire session)
         this.addressListCache = {
             data: uniqueNames
         };
@@ -79,10 +78,72 @@ export class FirewallService {
         return uniqueNames;
     }
 
+    public static async getAddressListEntries(config?: RouterConfig) {
+        const api = await RouterConnectionService.getConnection(config);
 
+        const entries = await api.write([
+            '/ip/firewall/address-list/print',
+            '=.proplist=.id,address,list,comment,created,disabled'
+        ]);
+
+        return entries.map((e: any) => ({
+            id: e['.id'],
+            address: e.address,
+            list: e.list,
+            comment: e.comment || '',
+            created: e.created,
+            disabled: e.disabled
+        }));
+    }
+
+    public static async moveAddressToList(entryId: string, newListName: string, config?: RouterConfig) {
+        const api = await RouterConnectionService.getConnection(config);
+
+        const safeListName = newListName.replace(/[^a-zA-Z0-9_\-.\s]+$/, '');
+
+        try {
+            await api.write([
+                '/ip/firewall/address-list/set',
+                `=.id=${entryId}`,
+                `=list=${safeListName}`
+            ]);
+
+            this.invalidateCache();
+
+            return { success: true, message: `Moved to list "${safeListName}"` };
+        } catch (error: any) {
+            console.error('Move address error:', error);
+            const message = error.message || '';
+            if (message.includes('not enough permissions')) {
+                throw new Error('Permission Denied: Ensure user has "write" permissions.');
+            }
+            throw new Error(message || 'Failed to move address');
+        }
+    }
+
+    public static async removeAddressEntry(entryId: string, config?: RouterConfig) {
+        const api = await RouterConnectionService.getConnection(config);
+
+        try {
+            await api.write([
+                '/ip/firewall/address-list/remove',
+                `=.id=${entryId}`
+            ]);
+
+            this.invalidateCache();
+
+            return { success: true, message: 'Address removed' };
+        } catch (error: any) {
+            console.error('Remove address error:', error);
+            const message = error.message || '';
+            if (message.includes('not enough permissions')) {
+                throw new Error('Permission Denied: Ensure user has "write" permissions.');
+            }
+            throw new Error(message || 'Failed to remove address');
+        }
+    }
 
     private static invalidateCache(): void {
-        console.log('Address list cache invalidated');
         this.addressListCache = null;
     }
 
@@ -91,6 +152,7 @@ export class FirewallService {
         const rules = await api.write(['/ip/firewall/filter/print']);
         return rules;
     }
+
     public static async toggleFilterRule(id: string, enable: boolean, config?: RouterConfig) {
         const api = await RouterConnectionService.getConnection(config);
         const command = enable ? '/ip/firewall/filter/enable' : '/ip/firewall/filter/disable';
@@ -101,5 +163,21 @@ export class FirewallService {
         ]);
 
         return { success: true };
+    }
+
+    public static async toggleAddressEntry(id: string, enable: boolean, config?: RouterConfig) {
+        const api = await RouterConnectionService.getConnection(config);
+        const command = enable ? '/ip/firewall/address-list/enable' : '/ip/firewall/address-list/disable';
+
+        try {
+            await api.write([
+                command,
+                `=.id=${id}`
+            ]);
+            return { success: true };
+        } catch (error: any) {
+            console.error('Toggle address error:', error);
+            throw new Error(error.message || 'Failed to toggle address list entry');
+        }
     }
 }

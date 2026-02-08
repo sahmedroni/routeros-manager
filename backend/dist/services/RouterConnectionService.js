@@ -28,6 +28,11 @@ class RouterConnectionService {
             throw new Error('Missing Router credentials (host or user). Please log in.');
         }
         const key = this.getConnectionKey(finalConfig);
+        // Check for cooldown on failed connections
+        const failure = this.failedConnections.get(key);
+        if (failure && Date.now() - failure.timestamp < this.COOLDOWN_MS) {
+            throw new Error(`Connection to ${key} is in cooldown (previous error: ${failure.message})`);
+        }
         if (this.connections.has(key)) {
             return this.connections.get(key);
         }
@@ -56,10 +61,23 @@ class RouterConnectionService {
                 this.connections.delete(key);
             });
             this.connections.set(key, api);
+            this.failedConnections.delete(key); // Clear any previous failure state on success
             return api;
         }
         catch (error) {
-            console.error(`Failed to connect to MikroTik (${key}):`, error);
+            const errorMessage = error.message || 'Unknown error';
+            // Only log detailed failure if not recently logged for this key
+            const lastFailure = this.failedConnections.get(key);
+            if (!lastFailure || Date.now() - lastFailure.timestamp > this.COOLDOWN_MS) {
+                console.error(`Failed to connect to MikroTik (${key}):`, errorMessage);
+                if (error.errno === -4078) {
+                    console.warn(`TIP: Connection Refused. Check if API service is enabled on MikroTik and port ${finalConfig.port} is correct.`);
+                }
+            }
+            this.failedConnections.set(key, {
+                timestamp: Date.now(),
+                message: errorMessage
+            });
             this.connectionStates.set(key, false);
             throw error;
         }
@@ -79,3 +97,5 @@ class RouterConnectionService {
 exports.RouterConnectionService = RouterConnectionService;
 RouterConnectionService.connections = new Map();
 RouterConnectionService.connectionStates = new Map();
+RouterConnectionService.failedConnections = new Map();
+RouterConnectionService.COOLDOWN_MS = 30000; // 30 seconds cooldown

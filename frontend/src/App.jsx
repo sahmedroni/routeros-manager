@@ -1,5 +1,6 @@
 import React from 'react';
 import './index.css';
+import { Activity } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import Dashboard from './pages/Dashboard';
@@ -9,7 +10,7 @@ import Traffic from './pages/Traffic';
 import Login from './pages/Login';
 import Security from './pages/Security';
 import Settings from './pages/Settings';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from './hooks/useAuth';
 
 import './App.css';
 
@@ -22,7 +23,14 @@ function App() {
     return (
       <div className="loading-screen">
         <div className="loader-container">
-          <div className="loader"></div>
+          <div className="preloader-logo">
+            <Activity className="logo-icon-loader" size={64} />
+            <span className="logo-text">NET<span className="accent">VOX</span></span>
+          </div>
+          <div className="loader-bar">
+            <div className="loader-progress"></div>
+          </div>
+          <div className="loader-status">Initializing Secure Link...</div>
         </div>
       </div>
     );

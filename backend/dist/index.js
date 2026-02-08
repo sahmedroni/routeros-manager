@@ -11,23 +11,53 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const helmet_1 = __importDefault(require("helmet"));
 const socket_1 = require("./socket");
 const FirewallService_1 = require("./services/FirewallService");
 const BandwidthService_1 = require("./services/BandwidthService");
 const RouterConnectionService_1 = require("./services/RouterConnectionService");
 const auth_1 = require("./middleware/auth");
 const crypto_1 = require("./utils/crypto");
+const PreferencesService_1 = require("./services/PreferencesService");
+const SimpleQueueService_1 = require("./services/SimpleQueueService");
+const SystemHealthService_1 = require("./services/SystemHealthService");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
     cors: {
-        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Restrict to frontend origin
+        origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
         methods: ['GET', 'POST'],
         credentials: true
     }
 });
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is not set. Please configure it in your .env file.');
+}
+if (JWT_SECRET.length < 32) {
+    throw new Error('FATAL: JWT_SECRET must be at least 32 characters long.');
+}
+// Security headers with Helmet
+app.use((0, helmet_1.default)({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'", "http://localhost:3001", "ws://localhost:3001"],
+            fontSrc: ["'self'", "data:"],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use((0, cors_1.default)({
     origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
     credentials: true
@@ -82,6 +112,90 @@ app.get('/api/me', auth_1.authMiddleware, (req, res) => {
         port: req.routerConfig?.port
     });
 });
+// Preferences API
+app.get('/api/preferences', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        const preferences = await PreferencesService_1.PreferencesService.getPreferences(userId);
+        res.json(preferences);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch preferences' });
+    }
+});
+app.post('/api/preferences', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        const { realtimeInterval, dhcpInterval, pingInterval, logInterval, interfaceInterval, nodeMonitorInterval } = req.body;
+        const preferences = await PreferencesService_1.PreferencesService.savePreferencesForUser(userId, {
+            realtimeInterval,
+            dhcpInterval,
+            pingInterval,
+            logInterval,
+            interfaceInterval,
+            nodeMonitorInterval
+        });
+        res.json(preferences);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to save preferences' });
+    }
+});
+app.delete('/api/preferences', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
+        await PreferencesService_1.PreferencesService.deletePreferences(userId);
+        res.json(PreferencesService_1.PreferencesService.getDefaultPreferences());
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to reset preferences' });
+    }
+});
+app.post('/api/system/reboot', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const result = await SystemHealthService_1.SystemHealthService.rebootRouter(req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to reboot router' });
+    }
+});
+app.get('/api/system/updates', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const updateInfo = await SystemHealthService_1.SystemHealthService.checkForUpdates(req.routerConfig);
+        res.json(updateInfo);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to check for updates' });
+    }
+});
+app.post('/api/system/updates/install', auth_1.authMiddleware, async (req, res) => {
+    const { password } = req.body;
+    if (!password) {
+        return res.status(400).json({ error: 'Password is required' });
+    }
+    // Verify password against the current router configuration
+    if (!req.routerConfig || password !== req.routerConfig.password) {
+        return res.status(401).json({ error: 'Invalid RouterOS password' });
+    }
+    try {
+        const result = await SystemHealthService_1.SystemHealthService.installUpdates(req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to install updates' });
+    }
+});
 app.get('/api/interfaces', auth_1.authMiddleware, async (req, res) => {
     try {
         const interfaces = await BandwidthService_1.BandwidthService.getInterfaces(req.routerConfig);
@@ -110,6 +224,35 @@ app.post('/api/firewall/add', auth_1.authMiddleware, async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
+app.get('/api/firewall/addresses', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const entries = await FirewallService_1.FirewallService.getAddressListEntries(req.routerConfig);
+        res.json(entries);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch address entries' });
+    }
+});
+app.post('/api/firewall/addresses/toggle', auth_1.authMiddleware, async (req, res) => {
+    const { id, enabled } = req.body;
+    try {
+        await FirewallService_1.FirewallService.toggleAddressEntry(id, enabled, req.routerConfig);
+        res.json({ success: true });
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message || 'Failed to toggle address' });
+    }
+});
+app.delete('/api/firewall/addresses/:id', auth_1.authMiddleware, async (req, res) => {
+    const entryId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await FirewallService_1.FirewallService.removeAddressEntry(entryId, req.routerConfig);
+        res.json(result);
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 app.get('/api/firewall/rules', auth_1.authMiddleware, async (req, res) => {
     try {
         const rules = await FirewallService_1.FirewallService.getFilterRules(req.routerConfig);
@@ -126,12 +269,84 @@ app.post('/api/firewall/toggle', auth_1.authMiddleware, async (req, res) => {
         res.json({ success: true });
     }
     catch (error) {
-        res.status(500).json({ error: 'Failed to toggle rule' });
+        res.status(400).json({ error: 'Failed to toggle rule' });
+    }
+});
+// Simple Queues API
+app.get('/api/queues', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const queues = await SimpleQueueService_1.SimpleQueueService.getQueues(req.routerConfig);
+        res.json(queues);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch queues' });
+    }
+});
+app.post('/api/queues', auth_1.authMiddleware, async (req, res) => {
+    const { name, target, maxLimit, priority, comment } = req.body;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.addQueue({ name, target, maxLimit, priority, comment }, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.put('/api/queues/:id', auth_1.authMiddleware, async (req, res) => {
+    const { name, maxLimit, disabled, comment } = req.body;
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.updateQueue(queueId, { name, maxLimit, disabled, comment }, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.delete('/api/queues/:id', auth_1.authMiddleware, async (req, res) => {
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.deleteQueue(queueId, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+app.post('/api/queues/:id/toggle', auth_1.authMiddleware, async (req, res) => {
+    const { enabled } = req.body;
+    const queueId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    try {
+        const result = await SimpleQueueService_1.SimpleQueueService.toggleQueue(queueId, enabled, req.routerConfig);
+        if (result.success) {
+            res.json(result);
+        }
+        else {
+            res.status(400).json({ error: result.message });
+        }
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 // Setup WebSocket
 (0, socket_1.setupWebSocket)(io);
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

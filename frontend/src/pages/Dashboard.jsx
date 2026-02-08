@@ -1,40 +1,53 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Activity, Server, Wifi } from 'lucide-react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { Activity, Server, Wifi, X, Download } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import InterfaceStatus from '../components/InterfaceStatus';
 import { useSocket } from '../hooks/useSocket';
 import './Dashboard.css';
 
-const MAX_LATENCY_POINTS = 15;
-
 const Dashboard = () => {
-  const { nodes, interfaceStatus, systemLogs } = useSocket();
-  const [latencyHistory, setLatencyHistory] = useState({});
+  const { nodes, interfaceStatus, systemLogs: liveLogs } = useSocket();
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [fullLogs, setFullLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const { user } = useAuth(); // Assuming useAuth provides user context with config if needed, or we just rely on cookies
 
-  useEffect(() => {
-    if (!nodes || nodes.length === 0) {
-      setLatencyHistory({});
-      return;
-    }
-
-    setLatencyHistory(prev => {
-      const updated = { ...prev };
-      nodes.forEach(node => {
-        if (!updated[node.id]) {
-          updated[node.id] = [];
-        }
-        if (node.latency !== null) {
-          const now = new Date();
-          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          updated[node.id] = [
-            ...updated[node.id].slice(-MAX_LATENCY_POINTS),
-            { time: timeStr, latency: node.latency }
-          ];
-        }
+  const fetchAllLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/logs`, {
+        credentials: 'include'
       });
-      return updated;
-    });
-  }, [nodes]);
+      if (response.ok) {
+        const data = await response.json();
+        setFullLogs(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch logs', error);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
+  const handleViewAllLogs = () => {
+    setShowLogModal(true);
+    fetchAllLogs();
+  };
+
+  const handleExportLogs = () => {
+    const textContent = fullLogs.map(log => `[${log.time}] [${log.topics}] ${log.message}`).join('\n');
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `routeros-logs-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const systemLogs = liveLogs || [];
 
   const getAlertType = (topics) => {
     if (!topics) return 'info';
@@ -83,28 +96,12 @@ const Dashboard = () => {
                 <div className="node-info-row">
                   <span className="info-label">Latency</span>
                   <span
-                    className="info-value latency-value"
+                    className="info-value latency-value latency-big"
                     style={{ color: getLatencyColor(node.latency) }}
                   >
                     {node.latency !== null ? `${node.latency} ms` : 'N/A'}
                   </span>
                 </div>
-
-                {node.status === 'online' && latencyHistory[node.id] && latencyHistory[node.id].length > 1 && (
-                  <div className="latency-graph-container">
-                    <ResponsiveContainer width="100%" height={20}>
-                      <LineChart data={latencyHistory[node.id]}>
-                        <Line
-                          type="monotone"
-                          dataKey="latency"
-                          stroke={getLatencyColor(node.latency)}
-                          strokeWidth={1.5}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
               </div>
 
               <div className="node-card-footer">
@@ -122,7 +119,7 @@ const Dashboard = () => {
         <div className="glass-card alerts-container">
           <div className="card-header">
             <h3>System Alerts</h3>
-            <span className="view-all">View All</span>
+            <span className="view-all" onClick={handleViewAllLogs} style={{ cursor: 'pointer' }}>View All</span>
           </div>
           <div className="alerts-list">
             {systemLogs && systemLogs.length > 0 ? (
@@ -157,6 +154,39 @@ const Dashboard = () => {
           <InterfaceStatus interfaces={interfaceStatus} />
         </div>
       </div>
+
+      {showLogModal && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-card">
+            <div className="modal-header">
+              <h3>System Logs</h3>
+              <div className="modal-actions">
+                <button className="icon-btn" onClick={handleExportLogs} title="Export to TXT">
+                  <Download size={20} />
+                </button>
+                <button className="icon-btn" onClick={() => setShowLogModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="modal-body log-list">
+              {loadingLogs ? (
+                <div className="loading-spinner">Loading logs...</div>
+              ) : (
+                fullLogs.map((log) => (
+                  <div key={log.id} className={`alert-item ${getAlertType(log.topics)}`}>
+                    <div className="alert-dot" />
+                    <div className="alert-info">
+                      <span className="alert-msg">{log.message}</span>
+                      <span className="alert-time">{log.time} • {log.topics}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
