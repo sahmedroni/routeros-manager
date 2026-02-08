@@ -151,7 +151,7 @@ app.post('/api/preferences', authMiddleware, async (req, res) => {
     try {
         const userId = `${req.routerConfig?.host}:${req.routerConfig?.user}`;
         const { realtimeInterval, dhcpInterval, pingInterval, logInterval, interfaceInterval, nodeMonitorInterval } = req.body;
-        
+
         const preferences = await PreferencesService.savePreferencesForUser(userId, {
             realtimeInterval,
             dhcpInterval,
@@ -160,7 +160,7 @@ app.post('/api/preferences', authMiddleware, async (req, res) => {
             interfaceInterval,
             nodeMonitorInterval
         });
-        
+
         res.json(preferences);
     } catch (error: any) {
         res.status(500).json({ error: 'Failed to save preferences' });
@@ -249,13 +249,13 @@ app.get('/api/firewall/addresses', authMiddleware, async (req, res) => {
     }
 });
 
-app.post('/api/firewall/addresses/move', authMiddleware, async (req, res) => {
-    const { entryId, newList } = req.body;
+app.post('/api/firewall/addresses/toggle', authMiddleware, async (req, res) => {
+    const { id, enabled } = req.body;
     try {
-        const result = await FirewallService.moveAddressToList(entryId, newList, req.routerConfig);
-        res.json(result);
+        await FirewallService.toggleAddressEntry(id, enabled, req.routerConfig);
+        res.json({ success: true });
     } catch (error: any) {
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message || 'Failed to toggle address' });
     }
 });
 

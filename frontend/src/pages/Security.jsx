@@ -156,6 +156,31 @@ const Security = () => {
         }
     };
 
+    const handleToggleAddress = async (id, currentStatus) => {
+        const newStatus = !currentStatus;
+        // Optimistic update
+        setAddressEntries(addressEntries.map(e => e.id === id ? { ...e, disabled: (!newStatus).toString() } : e));
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/firewall/addresses/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ id, enabled: newStatus })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to toggle address');
+            }
+            fetchAddressEntries();
+        } catch (err) {
+            console.error('Error toggling address:', err);
+            showNotification('Failed to update address status', 'error');
+            // Revert optimistic update
+            setAddressEntries(addressEntries.map(e => e.id === id ? { ...e, disabled: currentStatus.toString() } : e));
+        }
+    };
+
     const handleRemoveAddress = async (entryId, address) => {
         if (!window.confirm(`Remove address "${address}"?`)) return;
 
@@ -188,10 +213,39 @@ const Security = () => {
         }
     };
 
-    const filteredAddresses = addressEntries.filter(entry =>
-        (entry.address?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (entry.comment?.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const compareIPs = (a, b) => {
+        // Helper to check if string is a valid IPv4 or CIDR
+        const isIP = (ip) => /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?:\/[0-9]{1,2})?$/.test(ip);
+
+        const addrA = a.address || '';
+        const addrB = b.address || '';
+
+        if (isIP(addrA) && isIP(addrB)) {
+            const parseIP = (ip) => ip.split('/')[0].split('.').map(octet => parseInt(octet, 10));
+            const partsA = parseIP(addrA);
+            const partsB = parseIP(addrB);
+
+            for (let i = 0; i < 4; i++) {
+                const valA = partsA[i] || 0;
+                const valB = partsB[i] || 0;
+                if (valA !== valB) return valA - valB;
+            }
+            // If IPs are same, compare masks
+            const maskA = parseInt(addrA.split('/')[1] || '32', 10);
+            const maskB = parseInt(addrB.split('/')[1] || '32', 10);
+            return maskA - maskB;
+        }
+
+        // Fallback to alphabetical for hostnames or mixed types
+        return addrA.localeCompare(addrB);
+    };
+
+    const filteredAddresses = addressEntries
+        .filter(entry =>
+            (entry.address?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (entry.comment?.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+        .sort(compareIPs);
 
     const tabs = [
         { id: 'rules', label: 'Filter Rules', icon: Shield },
@@ -371,52 +425,64 @@ const Security = () => {
                                             <th>Address</th>
                                             <th>Comment</th>
                                             <th>Created</th>
+                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredAddresses.map((entry) => (
-                                            <tr key={entry.id}>
-                                                <td className="font-mono">{entry.address}</td>
-                                                <td className="text-muted">{entry.comment || '-'}</td>
-                                                <td className="text-muted">{entry.created || '-'}</td>
-                                                <td>
-                                                    <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
-                                                        <button
-                                                            className="action-btn"
-                                                            onClick={() => setShowMoveDropdown(showMoveDropdown === entry.id ? null : entry.id)}
-                                                            title="Move to list"
+                                        {filteredAddresses.map((entry) => {
+                                            const isDisabled = entry.disabled === 'true' || entry.disabled === true;
+                                            return (
+                                                <tr key={entry.id} className={isDisabled ? 'disabled-rule' : ''}>
+                                                    <td className="font-mono">{entry.address}</td>
+                                                    <td className="text-muted">{entry.comment || '-'}</td>
+                                                    <td className="text-muted">{entry.created || '-'}</td>
+                                                    <td>
+                                                        <div
+                                                            className={`toggle-switch ${isDisabled ? 'off' : 'on'}`}
+                                                            onClick={() => handleToggleAddress(entry.id, !isDisabled)}
                                                         >
-                                                            <ArrowRight size={14} />
-                                                        </button>
-                                                        <button
-                                                            className="action-btn"
-                                                            onClick={() => handleRemoveAddress(entry.id, entry.address)}
-                                                            title="Remove"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
+                                                            <div className="toggle-slider"></div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
+                                                            <button
+                                                                className="action-btn"
+                                                                onClick={() => setShowMoveDropdown(showMoveDropdown === entry.id ? null : entry.id)}
+                                                                title="Move to list"
+                                                            >
+                                                                <ArrowRight size={14} />
+                                                            </button>
+                                                            <button
+                                                                className="action-btn"
+                                                                onClick={() => handleRemoveAddress(entry.id, entry.address)}
+                                                                title="Remove"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
 
-                                                        {showMoveDropdown === entry.id && (
-                                                            <div className="move-dropdown">
-                                                                <div className="dropdown-header">Move to list:</div>
-                                                                {addressLists
-                                                                    .filter(l => l !== selectedList)
-                                                                    .map(list => (
-                                                                        <button
-                                                                            key={list}
-                                                                            className="dropdown-item"
-                                                                            onClick={() => handleMoveAddress(entry.id, list)}
-                                                                        >
-                                                                            {list}
-                                                                        </button>
-                                                                    ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                            {showMoveDropdown === entry.id && (
+                                                                <div className="move-dropdown">
+                                                                    <div className="dropdown-header">Move to list:</div>
+                                                                    {addressLists
+                                                                        .filter(l => l !== selectedList)
+                                                                        .map(list => (
+                                                                            <button
+                                                                                key={list}
+                                                                                className="dropdown-item"
+                                                                                onClick={() => handleMoveAddress(entry.id, list)}
+                                                                            >
+                                                                                {list}
+                                                                            </button>
+                                                                        ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

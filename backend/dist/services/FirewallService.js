@@ -63,14 +63,15 @@ class FirewallService {
         const api = await RouterConnectionService_1.RouterConnectionService.getConnection(config);
         const entries = await api.write([
             '/ip/firewall/address-list/print',
-            '=.proplist=.id,address,list,comment,created'
+            '=.proplist=.id,address,list,comment,created,disabled'
         ]);
         return entries.map((e) => ({
             id: e['.id'],
             address: e.address,
             list: e.list,
             comment: e.comment || '',
-            created: e.created
+            created: e.created,
+            disabled: e.disabled
         }));
     }
     static async moveAddressToList(entryId, newListName, config) {
@@ -129,6 +130,21 @@ class FirewallService {
             `=.id=${id}`
         ]);
         return { success: true };
+    }
+    static async toggleAddressEntry(id, enable, config) {
+        const api = await RouterConnectionService_1.RouterConnectionService.getConnection(config);
+        const command = enable ? '/ip/firewall/address-list/enable' : '/ip/firewall/address-list/disable';
+        try {
+            await api.write([
+                command,
+                `=.id=${id}`
+            ]);
+            return { success: true };
+        }
+        catch (error) {
+            console.error('Toggle address error:', error);
+            throw new Error(error.message || 'Failed to toggle address list entry');
+        }
     }
 }
 exports.FirewallService = FirewallService;

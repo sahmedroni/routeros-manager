@@ -225,14 +225,14 @@ app.get('/api/firewall/addresses', auth_1.authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch address entries' });
     }
 });
-app.post('/api/firewall/addresses/move', auth_1.authMiddleware, async (req, res) => {
-    const { entryId, newList } = req.body;
+app.post('/api/firewall/addresses/toggle', auth_1.authMiddleware, async (req, res) => {
+    const { id, enabled } = req.body;
     try {
-        const result = await FirewallService_1.FirewallService.moveAddressToList(entryId, newList, req.routerConfig);
-        res.json(result);
+        await FirewallService_1.FirewallService.toggleAddressEntry(id, enabled, req.routerConfig);
+        res.json({ success: true });
     }
     catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message || 'Failed to toggle address' });
     }
 });
 app.delete('/api/firewall/addresses/:id', auth_1.authMiddleware, async (req, res) => {

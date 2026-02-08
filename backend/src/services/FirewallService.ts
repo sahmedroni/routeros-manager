@@ -42,7 +42,7 @@ export class FirewallService {
             console.error('Firewall API Error:', error);
             const message = error.message || error.toString() || '';
             const lowerMessage = message.toLowerCase();
-            
+
             if (lowerMessage.includes('not enough permissions') || lowerMessage.includes('no such command')) {
                 throw new Error('Permission Denied: Ensure MikroTik user has "write" and "policy" permissions.');
             }
@@ -83,7 +83,7 @@ export class FirewallService {
 
         const entries = await api.write([
             '/ip/firewall/address-list/print',
-            '=.proplist=.id,address,list,comment,created'
+            '=.proplist=.id,address,list,comment,created,disabled'
         ]);
 
         return entries.map((e: any) => ({
@@ -91,7 +91,8 @@ export class FirewallService {
             address: e.address,
             list: e.list,
             comment: e.comment || '',
-            created: e.created
+            created: e.created,
+            disabled: e.disabled
         }));
     }
 
@@ -151,7 +152,7 @@ export class FirewallService {
         const rules = await api.write(['/ip/firewall/filter/print']);
         return rules;
     }
-    
+
     public static async toggleFilterRule(id: string, enable: boolean, config?: RouterConfig) {
         const api = await RouterConnectionService.getConnection(config);
         const command = enable ? '/ip/firewall/filter/enable' : '/ip/firewall/filter/disable';
@@ -162,5 +163,21 @@ export class FirewallService {
         ]);
 
         return { success: true };
+    }
+
+    public static async toggleAddressEntry(id: string, enable: boolean, config?: RouterConfig) {
+        const api = await RouterConnectionService.getConnection(config);
+        const command = enable ? '/ip/firewall/address-list/enable' : '/ip/firewall/address-list/disable';
+
+        try {
+            await api.write([
+                command,
+                `=.id=${id}`
+            ]);
+            return { success: true };
+        } catch (error: any) {
+            console.error('Toggle address error:', error);
+            throw new Error(error.message || 'Failed to toggle address list entry');
+        }
     }
 }
