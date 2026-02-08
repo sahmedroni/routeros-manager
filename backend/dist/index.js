@@ -347,6 +347,6 @@ app.post('/api/queues/:id/toggle', auth_1.authMiddleware, async (req, res) => {
 // Setup WebSocket
 (0, socket_1.setupWebSocket)(io);
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
