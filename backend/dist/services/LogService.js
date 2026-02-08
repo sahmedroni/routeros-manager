@@ -13,7 +13,9 @@ class LogService {
             const allLogs = await api.write(['/log/print', '?.id', '>.id', `=.proplist=time,topics,message`]);
             // Sort and take last N if needed, though MikroTik usually returns in order.
             // Let's just take the last 4.
-            return allLogs.slice(-limit).reverse().map((log) => ({
+            // If limit is 0, return all logs. Otherwise slice.
+            const logsToReturn = limit === 0 ? allLogs.reverse() : allLogs.slice(-limit).reverse();
+            return logsToReturn.map((log) => ({
                 id: log['.id'],
                 time: log.time,
                 topics: log.topics,

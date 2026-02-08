@@ -21,6 +21,7 @@ const crypto_1 = require("./utils/crypto");
 const PreferencesService_1 = require("./services/PreferencesService");
 const SimpleQueueService_1 = require("./services/SimpleQueueService");
 const SystemHealthService_1 = require("./services/SystemHealthService");
+const LogService_1 = require("./services/LogService");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
@@ -149,6 +150,15 @@ app.delete('/api/preferences', auth_1.authMiddleware, async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ error: 'Failed to reset preferences' });
+    }
+});
+app.get('/api/logs', auth_1.authMiddleware, async (req, res) => {
+    try {
+        const logs = await LogService_1.LogService.getLogs(req.routerConfig, 0);
+        res.json(logs);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch logs' });
     }
 });
 app.post('/api/system/reboot', auth_1.authMiddleware, async (req, res) => {
