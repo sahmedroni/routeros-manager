@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
         const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
         try {
             const [response] = await Promise.all([
-                fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' }),
+                fetch(`${BACKEND_URL}/api/me`, { credentials: 'include', cache: 'no-store' }),
                 minDelay
             ]);
 
@@ -49,7 +49,8 @@ export const AuthProvider = ({ children }) => {
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/preferences`, {
-                credentials: 'include'
+                credentials: 'include',
+                cache: 'no-store'
             });
 
             if (response.ok) {
@@ -75,7 +76,8 @@ export const AuthProvider = ({ children }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newPreferences),
-                credentials: 'include'
+                credentials: 'include',
+                cache: 'no-store'
             });
 
             if (response.ok) {
@@ -99,7 +101,8 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await fetch(`${BACKEND_URL}/api/preferences`, {
                 method: 'DELETE',
-                credentials: 'include'
+                credentials: 'include',
+                cache: 'no-store'
             });
 
             if (response.ok) {
@@ -118,7 +121,8 @@ export const AuthProvider = ({ children }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(config),
-                credentials: 'include'
+                credentials: 'include',
+                cache: 'no-store'
             });
 
             if (!response.ok) {
@@ -137,7 +141,8 @@ export const AuthProvider = ({ children }) => {
         try {
             await fetch(`${BACKEND_URL}/api/logout`, {
                 method: 'POST',
-                credentials: 'include'
+                credentials: 'include',
+                cache: 'no-store'
             });
         } catch (e) {
             console.error('Logout failed', e);
