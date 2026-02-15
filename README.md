@@ -6,10 +6,11 @@ A modern real-time dashboard for monitoring MikroTik routers running RouterOS 7.
 
 - **Dashboard** - Real-time CPU, RAM, Temperature, Voltage monitoring with live updates
 - **Traffic** - Live RX/TX bandwidth monitoring with interface selection
+- **Queues** - Manage Simple Queues (add/remove/toggle/edit) and monitor bandwidth limits
 - **Nodes** - Monitor custom network endpoints with ping latency graphs
 - **Security** - Manage firewall address lists (add/remove/toggle) and filter rules with numeric IP sorting
 - **Devices** - View connected DHCP clients and device information
-- **Settings** - View connected router information
+- **Settings** - Configure data refresh intervals and view router information
 - **Collapsible Sidebar** - Maximize screen space when needed
 - **Responsive Design** - Modern dark-mode UI with glassmorphism effects
 
@@ -59,7 +60,9 @@ mikrotik/
 │   │   │   ├── LogService.ts
 │   │   │   ├── NodeMonitorService.ts
 │   │   │   ├── PingService.ts
+│   │   │   ├── PreferencesService.ts # User preferences & intervals
 │   │   │   ├── RouterConnectionService.ts
+│   │   │   ├── SimpleQueueService.ts # Bandwidth queue management
 │   │   │   └── SystemHealthService.ts
 │   │   ├── middleware/
 │   │   │   └── auth.ts       # JWT authentication middleware
@@ -191,6 +194,7 @@ mikrotik/
 | **Rate Limiting** | 10 login attempts per 15 minutes |
 | **CORS Restriction** | Only localhost:5173 allowed |
 | **Secure Cookies** | `secure: true` in production mode |
+| **Firmware Security**| Mandatory password verification for system updates |
 | **Secrets Validation** | App fails at startup if secrets not configured |
 
 ### Security Documentation
@@ -199,14 +203,16 @@ See [SECURITY.md](./SECURITY.md) for detailed security information.
 
 ## Real-Time Data Intervals
 
-| Data | Interval |
-|------|----------|
+| Data | Default Interval |
+|------|------------------|
 | CPU, RAM, Bandwidth | 1 second |
 | Router Ping | 2 seconds |
 | Interface Status | 5 seconds |
 | DHCP Leases | 5 seconds |
 | System Logs | 5 seconds |
 | Custom Nodes | 3 seconds |
+
+*All intervals are dynamic and can be configured in the Settings page.*
 
 ## API Endpoints
 
@@ -229,6 +235,19 @@ See [SECURITY.md](./SECURITY.md) for detailed security information.
 | POST | `/api/firewall/addresses/toggle` | Enable/disable address entry (requires auth) |
 | POST | `/api/firewall/toggle` | Enable/disable filter rule (requires auth) |
 
+### Queues & Preferences
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/queues` | Get simple queues (requires auth) |
+| POST | `/api/queues` | Add new simple queue (requires auth) |
+| PUT | `/api/queues/:id` | Update existing queue (requires auth) |
+| DELETE | `/api/queues/:id` | Delete simple queue (requires auth) |
+| POST | `/api/queues/:id/toggle` | Enable/disable queue (requires auth) |
+| GET | `/api/preferences` | Get user refresh intervals (requires auth) |
+| POST | `/api/preferences` | Save user refresh intervals (requires auth) |
+| DELETE | `/api/preferences` | Reset to default intervals (requires auth) |
+
 ### Health
 
 | Method | Endpoint | Description |
@@ -243,7 +262,9 @@ See [SECURITY.md](./SECURITY.md) for detailed security information.
 | Event | Data | Description |
 |-------|------|-------------|
 | `change-bandwidth-interface` | `string` | Change monitored interface |
+| `update-intervals` | `Object` | Update data refresh intervals |
 | `add-node` | `{ ip, name }` | Add monitoring node |
+| `edit-node` | `{ id, ip, name }` | Edit existing node |
 | `remove-node` | `string` | Remove monitoring node |
 
 ### Server → Client

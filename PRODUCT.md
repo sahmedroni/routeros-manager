@@ -1,7 +1,7 @@
 # NETVOX - MikroTik Router Monitoring System
 
-**Version**: 1.0.1  
-**Last Updated**: February 8, 2026  
+**Version**: 1.0.2  
+**Last Updated**: February 15, 2026  
 **Status**: Production Ready
 
 ---
@@ -33,8 +33,10 @@ NETVOX consolidates all router monitoring into a single, modern dashboard with:
 
 - **Live metrics** streaming at 1-second intervals
 - **Custom endpoint monitoring** with ping latency graphs
+- **Bandwidth Queue management** for traffic control
 - **Connected device inventory** with lease tracking
 - **Firewall visibility** and quick actions
+- **Configurable refresh intervals** for all data streams
 - **Responsive design** for desktop and mobile access
 - **Secure authentication** with encrypted credentials
 
@@ -102,12 +104,14 @@ Example: 8.8.8.8 (Google DNS)
 - Lease expiration tracking
 - Connected/disconnected status
 
-### 5. Firewall Integration
+### 5. Firewall & Queue Integration
 
 - View address lists with intelligent numeric IP/CIDR sorting
 - Browse filter rules
 - Toggle rules and address list entries on/off
 - Quick add/remove for address list management
+- **Simple Queue management**: add, remove, and toggle bandwidth queues
+- **Real-time Queue status**: monitor max-limit and priority settings
 
 ### 6. Router Settings
 
