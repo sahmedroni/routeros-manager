@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const path_1 = __importDefault(require("path"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const cors_1 = __importDefault(require("cors"));
@@ -356,6 +357,13 @@ app.post('/api/queues/:id/toggle', auth_1.authMiddleware, async (req, res) => {
 });
 // Setup WebSocket
 (0, socket_1.setupWebSocket)(io);
+// Serve static files from the React app
+const frontendPath = path_1.default.join(__dirname, '../../frontend/dist');
+app.use(express_1.default.static(frontendPath));
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+    res.sendFile(path_1.default.join(frontendPath, 'index.html'));
+});
 const PORT = process.env.PORT || 3001;
 httpServer.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);

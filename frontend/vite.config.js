@@ -7,6 +7,17 @@ export default defineConfig({
   server: {
     headers: {
       'Cache-Control': 'no-store',
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      },
+      '/socket.io': {
+        target: 'http://localhost:3001',
+        ws: true,
+        changeOrigin: true
+      }
     }
   }
 

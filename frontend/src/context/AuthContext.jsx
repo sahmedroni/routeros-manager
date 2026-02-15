@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 export const AuthContext = createContext(null);
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 const DEFAULT_PREFERENCES = {
     realtimeInterval: 2000,
@@ -27,8 +27,13 @@ export const AuthProvider = ({ children }) => {
             ]);
 
             if (response.ok) {
-                const userData = await response.json();
-                setUser(userData);
+                const text = await response.text();
+                if (text) {
+                    const userData = JSON.parse(text);
+                    setUser(userData);
+                } else {
+                    setUser(null);
+                }
             } else {
                 setUser(null);
             }
@@ -126,8 +131,15 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Login failed');
+                const text = await response.text();
+                let errorMessage = 'Login failed';
+                try {
+                    const data = JSON.parse(text);
+                    errorMessage = data.error || errorMessage;
+                } catch (e) {
+                    errorMessage = `Server error: ${response.status}`;
+                }
+                throw new Error(errorMessage);
             }
 
             await checkSession();
