@@ -247,6 +247,242 @@
     border-color: rgba(255, 165, 0, 0.2);
 }
 
+.router-selector-container {
+    position: relative;
+}
+
+.router-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 200, 255, 0.08);
+    border: 1px solid rgba(0, 200, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--accent-cyan);
+    font-size: 0.8rem;
+    font-family: var(--font-display);
+}
+
+.router-selector:hover,
+.router-selector.active {
+    background: rgba(0, 200, 255, 0.15);
+    border-color: rgba(0, 200, 255, 0.4);
+}
+
+.router-name {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.router-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    z-index: 100;
+    background: rgba(10, 10, 15, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+}
+
+.router-menu-header {
+    padding: 10px 14px;
+}
+
+.router-menu-title {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.router-menu-divider {
+    height: 1px;
+    background: var(--glass-border);
+    margin: 6px 8px;
+}
+
+.router-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    margin-bottom: 2px;
+}
+
+.router-menu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.router-menu-item.active {
+    background: rgba(57, 255, 20, 0.08);
+    border: 1px solid rgba(57, 255, 20, 0.2);
+}
+
+.router-menu-item.active .router-item-info {
+    color: var(--accent-green);
+}
+
+.active-indicator {
+    font-size: 0.65rem;
+    color: var(--accent-green);
+    background: rgba(57, 255, 20, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.router-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    flex: 1;
+    color: var(--text-secondary);
+}
+
+.router-item-info:hover {
+    color: white;
+}
+
+.router-item-details {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.router-item-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.router-item-host {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.router-delete-btn {
+    padding: 6px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.router-delete-btn:hover {
+    background: rgba(255, 77, 77, 0.1);
+    color: #ff4d4d;
+}
+
+.add-router-btn {
+    background: rgba(0, 200, 255, 0.1);
+    border: 1px dashed rgba(0, 200, 255, 0.3);
+    margin-bottom: 8px;
+}
+
+.add-router-btn:hover {
+    background: rgba(0, 200, 255, 0.15);
+    border-color: rgba(0, 200, 255, 0.5);
+}
+
+.add-router-form {
+    padding: 4px;
+}
+
+.add-router-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+}
+
+.add-router-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: white;
+    font-size: 0.8rem;
+    font-family: var(--font-main);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.add-router-input:focus {
+    border-color: var(--accent-cyan);
+    background: rgba(0, 242, 255, 0.05);
+}
+
+.add-router-input::placeholder {
+    color: var(--text-muted);
+}
+
+.add-router-actions {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    margin-top: 4px;
+}
+
+.add-router-cancel {
+    flex: 1;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-router-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.add-router-submit {
+    flex: 1;
+    padding: 8px;
+    background: var(--accent-cyan);
+    border: none;
+    border-radius: 6px;
+    color: #050507;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-router-submit:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.add-router-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 @keyframes pulse-red {
     0%, 100% {
         box-shadow: 0 0 0 0 rgba(255, 76, 60, 0.4);
@@ -354,5 +590,72 @@
 @media (min-width: 769px) {
     .topbar {
         padding: 0 32px;
+    }
+}
+
+.topbar-timer-v2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-circle-container {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-circle {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.progress-circle-bg {
+    stroke: rgba(255, 255, 255, 0.05);
+}
+
+.progress-circle-bar {
+    stroke: var(--accent-cyan);
+    transition: stroke-dashoffset 0.1s linear;
+    filter: drop-shadow(0 0 4px rgba(0, 242, 255, 0.5));
+}
+
+.timer-icon {
+    position: absolute;
+    color: var(--accent-cyan);
+    opacity: 0.8;
+}
+
+@media (max-width: 1024px) {
+    .topbar-timer-v2 {
+        display: none;
+    }
+}
+
+
+.refresh-countdown strong {
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+    min-width: 32px;
+    display: inline-block;
+    text-align: right;
+}
+
+.refresh-countdown svg {
+    color: var(--accent-cyan);
+    opacity: 0.8;
+}
+
+.timer-text {
+    white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+    .topbar-timer {
+        display: none;
     }
 }

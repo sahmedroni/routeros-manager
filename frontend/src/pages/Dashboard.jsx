@@ -75,8 +75,8 @@ const Dashboard = () => {
             <p className="small">Navigate to the Nodes page to add monitoring endpoints</p>
           </div>
         ) : (
-          nodes.map((node) => (
-            <div key={node.id} className={`glass-card node-dashboard-card ${node.status}`}>
+          nodes.map((node, index) => (
+            <div key={node.id || index} className={`glass-card node-dashboard-card ${node.status}`}>
               <div className="node-card-header">
                 <div className="node-title-section">
                   <span className={`status-indicator ${node.status}`}></span>
@@ -123,8 +123,8 @@ const Dashboard = () => {
           </div>
           <div className="alerts-list">
             {systemLogs && systemLogs.length > 0 ? (
-              systemLogs.map((log) => (
-                <div key={log.id} className={`alert-item ${getAlertType(log.topics)}`}>
+              systemLogs.map((log, index) => (
+                <div key={log.id || index} className={`alert-item ${getAlertType(log.topics)}`}>
                   <div className="alert-dot" />
                   <div className="alert-info">
                     <span className="alert-msg">{log.message}</span>
@@ -173,8 +173,8 @@ const Dashboard = () => {
               {loadingLogs ? (
                 <div className="loading-spinner">Loading logs...</div>
               ) : (
-                fullLogs.map((log) => (
-                  <div key={log.id} className={`alert-item ${getAlertType(log.topics)}`}>
+                fullLogs.map((log, index) => (
+                  <div key={log.id || index} className={`alert-item ${getAlertType(log.topics)}`}>
                     <div className="alert-dot" />
                     <div className="alert-info">
                       <span className="alert-msg">{log.message}</span>

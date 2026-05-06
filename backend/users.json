@@ -1,0 +1,32 @@
+[
+  {
+    "id": "user-1777201483191-lsi8pmt6i",
+    "username": "admin",
+    "passwordHash": "82f0bf4c56a24e79df2d04e359a91813803268c02cf51221f84b77ba6fedfdcbc121360d45a4ac9e7d37988c29306799778a0f100af4a4d698f369b99c369834",
+    "salt": "27077308f96af391f314bc5f9b145ba4d093bc7da9a99c8997c4420b80818af2",
+    "createdAt": 1777201483191,
+    "updatedAt": 1778043648399,
+    "routers": [
+      {
+        "id": "router-1778042604678-an9w46qwn",
+        "name": "HO test",
+        "host": "192.168.100.1",
+        "user": "monitor",
+        "port": 8739,
+        "encryptedPassword": "2609cd0610feb5cfa3b0d5fc4a7dfa6d:274af5bb2bded4be21e94340cefdc210:576490eb5f4ba47b9b111868a45a3185",
+        "createdAt": 1778042604678,
+        "updatedAt": 1778042604678
+      },
+      {
+        "id": "router-1778043648399-1c2m3u3eu",
+        "name": "Factory",
+        "host": "192.168.0.1",
+        "user": "monitor",
+        "port": 8739,
+        "encryptedPassword": "0fdee214e316706b909c84d4eda5aa17:3d2d0be99c3243d2299b00ec0f2c680a:948af8ebe7a6e9b6d892ce6290d72580",
+        "createdAt": 1778043648399,
+        "updatedAt": 1778043648399
+      }
+    ]
+  }
+]

@@ -6,13 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupWebSocket = setupWebSocket;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cookie_1 = __importDefault(require("cookie"));
-const crypto_1 = require("./utils/crypto");
 const SystemHealthService_1 = require("./services/SystemHealthService");
 const BandwidthService_1 = require("./services/BandwidthService");
 const DhcpService_1 = require("./services/DhcpService");
 const PingService_1 = require("./services/PingService");
 const LogService_1 = require("./services/LogService");
 const NodeMonitorService_1 = require("./services/NodeMonitorService");
+const UserService_1 = require("./services/UserService");
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
     throw new Error('FATAL: JWT_SECRET environment variable is not set. Please configure it in your .env file.');
@@ -21,27 +21,35 @@ if (JWT_SECRET.length < 32) {
     throw new Error('FATAL: JWT_SECRET must be at least 32 characters long.');
 }
 function setupWebSocket(io) {
-    io.on('connection', (socket) => {
-        // console.log('Client connected:', socket.id);
+    io.on('connection', async (socket) => {
         let routerConfig;
+        let userId;
+        let activeRouterId;
         try {
             const cookies = cookie_1.default.parse(socket.handshake.headers.cookie || '');
             const token = cookies.token;
             if (token) {
                 const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-                routerConfig = {
-                    host: decoded.host,
-                    user: decoded.user,
-                    password: (0, crypto_1.decrypt)(decoded.encryptedPass),
-                    port: decoded.port
-                };
+                userId = decoded.userId;
+                activeRouterId = decoded.activeRouterId;
+                if (activeRouterId && userId) {
+                    const router = await UserService_1.UserService.getRouterWithPassword(userId, activeRouterId);
+                    if (router) {
+                        routerConfig = {
+                            host: router.host,
+                            user: router.user,
+                            password: router.password,
+                            port: router.port
+                        };
+                    }
+                }
             }
         }
         catch (error) {
             console.error('Socket auth failed:', error);
         }
         if (!routerConfig) {
-            console.log('No valid session found, disconnecting socket:', socket.id);
+            console.log('No active router found, disconnecting socket:', socket.id);
             socket.disconnect(true);
             return;
         }

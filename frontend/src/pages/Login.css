@@ -178,6 +178,78 @@
     text-align: center;
 }
 
+.save-router-option {
+    margin: 12px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: 8px 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-custom {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--glass-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkbox-custom {
+    background: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkbox-custom::after {
+    content: '✓';
+    color: #050507;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.checkbox-label:hover {
+    color: white;
+}
+
+.router-name-input {
+    margin-top: 8px;
+    margin-left: 28px;
+}
+
+.router-name-input input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: white;
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.router-name-input input:focus {
+    border-color: var(--accent-cyan);
+    background: rgba(0, 242, 255, 0.05);
+}
+
+.router-name-input input::placeholder {
+    color: var(--text-muted);
+}
+
 .login-btn {
     height: 52px;
     background: linear-gradient(90deg, var(--accent-cyan), #00a2ff);

@@ -7,7 +7,7 @@
 .settings-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
     margin-bottom: 1.5rem;
 }
 
@@ -412,6 +412,40 @@
     border: 1px solid rgba(255, 49, 49, 0.3);
 }
 
+.refresh-countdown {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(0, 242, 255, 0.05);
+    border: 1px solid rgba(0, 242, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.refresh-countdown strong {
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+    min-width: 32px;
+    display: inline-block;
+    text-align: right;
+}
+
+.refresh-countdown svg {
+    color: var(--accent-cyan);
+    opacity: 0.8;
+}
+
+.refresh-countdown svg.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 @keyframes slideInUp {
     from {
         opacity: 0;
@@ -794,3 +828,90 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* Preferences Card Styles */
+.preferences-card {
+    padding: 1.5rem;
+}
+
+.preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 1rem;
+}
+
+.preference-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.preference-label svg {
+    color: var(--accent-cyan);
+    opacity: 0.8;
+}
+
+.preference-select {
+    background: #0a0a0f;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 160px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.preference-select:hover {
+    border-color: var(--accent-cyan);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.preference-select:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.1);
+}
+
+.preference-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255, 165, 0, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 165, 0, 0.1);
+}
+
+.preference-info svg {
+    color: var(--accent-orange);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.preference-info span {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+    .preference-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .preference-select {
+        width: 100%;
+    }
+}

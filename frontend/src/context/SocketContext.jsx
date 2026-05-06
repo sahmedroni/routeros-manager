@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { useAuth } from '../hooks/useAuth';
 
 export const SocketContext = createContext(null);
 
@@ -7,6 +8,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 export const SocketProvider = ({ children }) => {
     const [isConnected, setIsConnected] = useState(false);
     const socketRef = useRef(null);
+    const { triggerSocketReconnect, preferences } = useAuth();
 
     const connect = useCallback(() => {
         if (socketRef.current?.connected) return;
@@ -21,7 +23,10 @@ export const SocketProvider = ({ children }) => {
             reconnectionAttempts: 10,
             reconnectionDelay: 5000,
             reconnectionDelayMax: 30000,
-            timeout: 30000
+            timeout: 30000,
+            auth: {
+                preferences
+            }
         });
 
         socketRef.current = socket;
@@ -40,7 +45,7 @@ export const SocketProvider = ({ children }) => {
             console.error('Socket connection error:', err.message);
             setIsConnected(false);
         });
-    }, []);
+    }, [preferences]);
 
     const disconnect = useCallback(() => {
         if (socketRef.current) {
@@ -56,6 +61,16 @@ export const SocketProvider = ({ children }) => {
             disconnect();
         };
     }, [connect, disconnect]);
+
+    useEffect(() => {
+        if (triggerSocketReconnect > 0) {
+            console.log('Triggering socket reconnect due to router switch');
+            disconnect();
+            setTimeout(() => {
+                connect();
+            }, 300);
+        }
+    }, [triggerSocketReconnect, connect, disconnect]);
 
     const on = useCallback((event, callback) => {
         if (!socketRef.current) return;

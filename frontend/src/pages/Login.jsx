@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { Shield, Server, User, Lock, Globe, ArrowRight } from 'lucide-react';
+import { Shield, User, Lock, ArrowRight, LogIn } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import './Login.css';
 
 const Login = () => {
     const { login } = useAuth();
     const [formData, setFormData] = useState({
-        host: localStorage.getItem('last_host') || '192.168.0.1',
-        user: localStorage.getItem('last_user') || 'admin',
-        password: '',
-        port: localStorage.getItem('last_port') || '8728'
+        username: localStorage.getItem('last_username') || '',
+        password: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -21,21 +19,17 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.password) return;
+        if (!formData.username || !formData.password) return;
         setIsSubmitting(true);
         setError(null);
 
         try {
             await login({
-                host: formData.host,
-                user: formData.user,
-                password: formData.password,
-                port: parseInt(formData.port)
+                username: formData.username,
+                password: formData.password
             });
 
-            localStorage.setItem('last_host', formData.host);
-            localStorage.setItem('last_user', formData.user);
-            localStorage.setItem('last_port', formData.port);
+            localStorage.setItem('last_username', formData.username);
         } catch (err) {
             console.error('Login error:', err);
             setError(err.message || 'Authentication failed');
@@ -57,53 +51,23 @@ const Login = () => {
                     <div className="logo-icon glass">
                         <Shield size={32} className="shield-icon" />
                     </div>
-                    <h1>Antigravity Auth</h1>
-                    <p>Secure Interface for MikroTik RouterOS</p>
+                    <h1>Router Manager</h1>
+                    <p>Sign in to manage your MikroTik routers</p>
                 </div>
 
                 <form className="login-form" onSubmit={handleSubmit}>
                     <div className="input-group">
-                        <label><Globe size={14} /> Router Host IP</label>
+                        <label><User size={14} /> Username</label>
                         <div className="input-field">
-                            <Server size={18} />
+                            <User size={18} />
                             <input
                                 type="text"
-                                name="host"
-                                placeholder="192.168.0.1"
-                                value={formData.host}
+                                name="username"
+                                placeholder="Enter username"
+                                value={formData.username}
                                 onChange={handleChange}
                                 required
                             />
-                        </div>
-                    </div>
-
-                    <div className="form-row">
-                        <div className="input-group">
-                            <label>API Port</label>
-                            <div className="input-field">
-                                <input
-                                    type="text"
-                                    name="port"
-                                    placeholder="8728"
-                                    value={formData.port}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="input-group flex-2">
-                            <label><User size={14} /> Username</label>
-                            <div className="input-field">
-                                <User size={18} />
-                                <input
-                                    type="text"
-                                    name="user"
-                                    placeholder="admin"
-                                    value={formData.user}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
                         </div>
                     </div>
 
@@ -114,9 +78,10 @@ const Login = () => {
                             <input
                                 type="password"
                                 name="password"
-                                placeholder="••••••••"
+                                placeholder="Enter password"
                                 value={formData.password}
                                 onChange={handleChange}
+                                required
                             />
                         </div>
                     </div>
@@ -127,20 +92,20 @@ const Login = () => {
                         </div>
                     )}
 
-                    <button type="submit" className="login-btn" disabled={isSubmitting || !formData.password}>
+                    <button type="submit" className="login-btn" disabled={isSubmitting || !formData.username || !formData.password}>
                         {isSubmitting ? (
                             <span className="loader" />
                         ) : (
                             <>
-                                Establish Connection
-                                <ArrowRight size={18} />
+                                Sign In
+                                <LogIn size={18} />
                             </>
                         )}
                     </button>
                 </form>
 
                 <div className="login-footer">
-                    <p>Direct encrypted connection to RouterOS API</p>
+                    <p>Enter your credentials to access the dashboard</p>
                 </div>
             </div>
         </div>

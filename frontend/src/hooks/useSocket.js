@@ -116,6 +116,10 @@ export function useSocket() {
         });
     }, [emit, setNodes]);
 
+    const updateIntervals = useCallback((intervals) => {
+        emit('update-intervals', intervals);
+    }, [emit]);
+
     return {
         realtimeStats,
         interfaceStatus,
@@ -126,8 +130,8 @@ export function useSocket() {
         latencyHistory,
         changeInterface,
         nodes,
-        addNode,
-        removeNode
-        , editNode
+        removeNode,
+        editNode,
+        updateIntervals
     };
 }

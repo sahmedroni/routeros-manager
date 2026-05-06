@@ -43,24 +43,30 @@ export class PreferencesService {
         await this.loadPreferences();
     }
 
-    public static async getPreferences(userId: string): Promise<UserPreferences> {
+    public static async getPreferences(userId: string, routerId?: string): Promise<UserPreferences> {
         await this.init();
-        const prefs = this.preferences.get(userId);
+        const key = routerId ? `${userId}:${routerId}` : userId;
+        const prefs = this.preferences.get(key);
         return prefs ? { ...DEFAULT_PREFERENCES, ...prefs } : { ...DEFAULT_PREFERENCES };
     }
 
-    public static async savePreferencesForUser(userId: string, prefs: Partial<UserPreferences>): Promise<UserPreferences> {
+    public static async savePreferencesForUser(userId: string, routerId: string, prefs: Partial<UserPreferences>): Promise<UserPreferences> {
         await this.init();
-        const current = this.preferences.get(userId) || {};
+        const key = `${userId}:${routerId}`;
+        const current = this.preferences.get(key) || {};
         const updated = { ...current, ...prefs };
-        this.preferences.set(userId, updated as UserPreferences);
+        this.preferences.set(key, updated as UserPreferences);
         await this.savePreferences();
         return { ...DEFAULT_PREFERENCES, ...updated };
     }
 
-    public static async deletePreferences(userId: string): Promise<void> {
+    public static async deletePreferences(userId: string, routerId?: string): Promise<void> {
         await this.init();
-        this.preferences.delete(userId);
+        if (routerId) {
+            this.preferences.delete(`${userId}:${routerId}`);
+        } else {
+            this.preferences.delete(userId);
+        }
         await this.savePreferences();
     }
 

@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../hooks/useAuth';
-import { Server, Tag, Globe, User, Power, AlertCircle, CheckCircle, RefreshCw, Download, Package } from 'lucide-react';
+import { Server, Tag, Globe, Power, AlertCircle, CheckCircle, RefreshCw, Download, Package, Settings as SettingsIcon, Clock } from 'lucide-react';
 import './Settings.css';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
 const Settings = () => {
-    const { realtimeStats } = useSocket();
-    const { user } = useAuth();
+    const { realtimeStats, updateIntervals } = useSocket();
+    const { preferences, updatePreferences } = useAuth();
     const [notification, setNotification] = useState(null);
     const [isRebooting, setIsRebooting] = useState(false);
     const [updateInfo, setUpdateInfo] = useState(null);
+    const [systemInfo, setSystemInfo] = useState(null);
     const [checkingUpdates, setCheckingUpdates] = useState(false);
     const [installingUpdates, setInstallingUpdates] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -25,6 +26,35 @@ const Settings = () => {
     const showNotification = (message, type = 'success') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 4000);
+    };
+
+    const fetchSystemInfo = async () => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/system/dashboard`, {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setSystemInfo(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch system info:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchSystemInfo();
+    }, []);
+
+    useEffect(() => {
+        fetchSystemInfo();
+    }, []);
+
+    const handleIntervalChange = (e) => {
+        const interval = parseInt(e.target.value);
+        updatePreferences({ realtimeInterval: interval });
+        updateIntervals({ realtimeInterval: interval });
+        showNotification(`Refresh interval set to ${interval / 1000}s`, 'success');
     };
 
     const checkForUpdates = async () => {
@@ -156,39 +186,16 @@ const Settings = () => {
                                 <Tag size={14} />
                                 <span>Identity</span>
                             </div>
-                            <div className="info-value">{realtimeStats?.identity || 'N/A'}</div>
+                            <div className="info-value">{systemInfo?.identity || realtimeStats?.identity || 'N/A'}</div>
                         </div>
 
-                        <div className="info-item">
-                            <div className="info-label">
-                                <Globe size={14} />
-                                <span>Host</span>
-                            </div>
-                            <div className="info-value font-mono">{user?.host || 'N/A'}</div>
-                        </div>
-
-                        <div className="info-item">
-                            <div className="info-label">
-                                <User size={14} />
-                                <span>Username</span>
-                            </div>
-                            <div className="info-value">{user?.user || 'N/A'}</div>
-                        </div>
-
-                        <div className="info-item">
-                            <div className="info-label">
-                                <Tag size={14} />
-                                <span>API Port</span>
-                            </div>
-                            <div className="info-value font-mono">{user?.port || 'N/A'}</div>
-                        </div>
 
                         <div className="info-item">
                             <div className="info-label">
                                 <Server size={14} />
                                 <span>Model</span>
                             </div>
-                            <div className="info-value">{realtimeStats?.model || 'Unknown'}</div>
+                            <div className="info-value">{systemInfo?.model || realtimeStats?.model || 'Unknown'}</div>
                         </div>
 
                         <div className="info-item">
@@ -196,7 +203,7 @@ const Settings = () => {
                                 <Tag size={14} />
                                 <span>RouterOS Version</span>
                             </div>
-                            <div className="info-value">{realtimeStats?.version || 'Unknown'}</div>
+                            <div className="info-value">{systemInfo?.version || realtimeStats?.version || 'Unknown'}</div>
                         </div>
 
                         <div className="info-item">
@@ -204,7 +211,7 @@ const Settings = () => {
                                 <Globe size={14} />
                                 <span>Uptime</span>
                             </div>
-                            <div className="info-value">{formatUptime(realtimeStats?.uptime)}</div>
+                            <div className="info-value">{formatUptime(systemInfo?.uptime || realtimeStats?.uptime)}</div>
                         </div>
                     </div>
                 </div>
@@ -291,6 +298,40 @@ const Settings = () => {
                             </button>
                         </div>
                     )}
+                </div>
+
+                <div className="glass-card preferences-card">
+                    <div className="card-header">
+                        <SettingsIcon size={20} color="var(--accent-cyan)" />
+                        <h3>System Preferences</h3>
+                    </div>
+                    <p className="card-description">
+                        Adjust how frequently the application fetches data from your router.
+                    </p>
+
+                    <div className="preference-item">
+                        <div className="preference-label">
+                            <Clock size={16} />
+                            <span>Data Refresh Rate</span>
+                        </div>
+                        <select 
+                            className="preference-select"
+                            value={preferences?.realtimeInterval || 2000}
+                            onChange={handleIntervalChange}
+                        >
+                            <option value={1000}>Aggressive (1s)</option>
+                            <option value={2000}>Normal (2s)</option>
+                            <option value={5000}>Balanced (5s)</option>
+                            <option value={10000}>Power Saving (10s)</option>
+                            <option value={30000}>Minimal (30s)</option>
+                            <option value={60000}>Manual (1m)</option>
+                        </select>
+                    </div>
+                    
+                    <div className="preference-info">
+                        <AlertCircle size={14} />
+                        <span>Higher refresh rates increase router CPU load.</span>
+                    </div>
                 </div>
             </div>
 

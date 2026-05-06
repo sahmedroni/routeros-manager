@@ -17,6 +17,87 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
+    const [savedRouters, setSavedRouters] = useState([]);
+    const [activeRouter, setActiveRouter] = useState(null);
+    const [socketReconnectTrigger, setSocketReconnectTrigger] = useState(0);
+
+    const fetchRouters = useCallback(async () => {
+        if (!user) return;
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/routers`, {
+                credentials: 'include',
+                cache: 'no-store'
+            });
+            if (response.ok) {
+                const routers = await response.json();
+                setSavedRouters(routers);
+            }
+        } catch (error) {
+            console.error('Failed to fetch routers:', error);
+        }
+    }, [user]);
+
+    const addRouter = useCallback(async (routerData) => {
+        if (!user) return;
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/routers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(routerData),
+                credentials: 'include',
+                cache: 'no-store'
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to save router');
+            }
+            await fetchRouters();
+        } catch (error) {
+            throw error;
+        }
+    }, [user, fetchRouters]);
+
+    const deleteRouter = useCallback(async (routerId) => {
+        if (!user) return;
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/routers/${routerId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                cache: 'no-store'
+            });
+            if (response.ok) {
+                await fetchRouters();
+            }
+        } catch (error) {
+            console.error('Failed to delete router:', error);
+        }
+    }, [user, fetchRouters]);
+
+    const switchRouter = useCallback(async (router) => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/routers/${router.id}/set-active`, {
+                method: 'POST',
+                credentials: 'include',
+                cache: 'no-store'
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to switch router');
+            }
+            const result = await response.json();
+            setActiveRouter(result.router);
+            setTimeout(() => {
+                setSocketReconnectTrigger(prev => prev + 1);
+            }, 500);
+        } catch (error) {
+            console.error('Failed to switch router:', error);
+            throw error;
+        }
+    }, []);
+
+    const triggerSocketReconnect = useCallback(() => {
+        setSocketReconnectTrigger(prev => prev + 1);
+    }, []);
 
     const checkSession = useCallback(async () => {
         const minDelay = new Promise(resolve => setTimeout(resolve, 1500));
@@ -28,13 +109,19 @@ export const AuthProvider = ({ children }) => {
 
             if (response.ok) {
                 const userData = await response.json();
-                setUser(userData);
+                setUser({ username: userData.username, userId: userData.userId });
+                setActiveRouter(userData.activeRouter);
+                setSavedRouters(userData.routers || []);
             } else {
                 setUser(null);
+                setActiveRouter(null);
+                setSavedRouters([]);
             }
         } catch (error) {
             console.error('Session check failed', error);
             setUser(null);
+            setActiveRouter(null);
+            setSavedRouters([]);
         } finally {
             setLoading(false);
         }
@@ -45,7 +132,7 @@ export const AuthProvider = ({ children }) => {
     }, [checkSession]);
 
     const loadPreferences = useCallback(async () => {
-        if (!user) return;
+        if (!activeRouter) return;
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/preferences`, {
@@ -60,16 +147,16 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Failed to load preferences:', error);
         }
-    }, [user]);
+    }, [activeRouter]);
 
     useEffect(() => {
-        if (user) {
+        if (activeRouter) {
             loadPreferences();
         }
-    }, [user, loadPreferences]);
+    }, [activeRouter, loadPreferences]);
 
     const savePreferences = useCallback(async (newPreferences) => {
-        if (!user) return;
+        if (!activeRouter) return;
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/preferences`, {
@@ -87,7 +174,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Failed to save preferences:', error);
         }
-    }, [user]);
+    }, [activeRouter]);
 
     const updatePreferences = useCallback((newPreferences) => {
         const updated = { ...preferences, ...newPreferences };
@@ -96,7 +183,7 @@ export const AuthProvider = ({ children }) => {
     }, [preferences, savePreferences]);
 
     const resetPreferences = useCallback(async () => {
-        if (!user) return;
+        if (!activeRouter) return;
 
         try {
             const response = await fetch(`${BACKEND_URL}/api/preferences`, {
@@ -113,14 +200,14 @@ export const AuthProvider = ({ children }) => {
             console.error('Failed to reset preferences:', error);
             setPreferences(DEFAULT_PREFERENCES);
         }
-    }, [user]);
+    }, [activeRouter]);
 
-    const login = async (config) => {
+    const login = async (credentials) => {
         try {
             const response = await fetch(`${BACKEND_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config),
+                body: JSON.stringify(credentials),
                 credentials: 'include',
                 cache: 'no-store'
             });
@@ -151,6 +238,8 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setLoading(false);
         setPreferences(DEFAULT_PREFERENCES);
+        setSavedRouters([]);
+        setActiveRouter(null);
     }, []);
 
     return (
@@ -161,11 +250,16 @@ export const AuthProvider = ({ children }) => {
             loading,
             preferences,
             updatePreferences,
-            resetPreferences
+            resetPreferences,
+            savedRouters,
+            activeRouter,
+            fetchRouters,
+            addRouter,
+            deleteRouter,
+            switchRouter,
+            triggerSocketReconnect
         }}>
             {children}
         </AuthContext.Provider>
     );
 };
-
-
